@@ -5,3 +5,76 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  supabaseId String   @unique
+  role       UserRole @default(USER)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  profile      Profile?
+  reservations Reservation[]
+  listings     Listing[]
+}
+
+model Profile {
+  id        String  @id
+  firstName String
+  lastName  String
+  avatarUrl String?
+  bio       String?
+
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model Listing {
+  id            String        @id @default(uuid())
+  title         String
+  description   String
+  pricePerNight Decimal       @db.Decimal(10, 2)
+  status        ListingStatus @default(DRAFT)
+
+  hostId String
+  host   User   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  amenities    Amenity[]     @relation("ListingAmenities")
+  reservations Reservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reservation {
+  id        String  @id @default(uuid())
+  userId    String?
+  listingId String
+
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Decimal  @db.Decimal(10, 2)
+
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+}
+
+model Amenity {
+  id   String @id @default(uuid())
+  name String @unique
+
+  listings Listing[] @relation("ListingAmenities")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+}

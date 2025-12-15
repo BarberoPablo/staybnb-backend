@@ -1,0 +1,7 @@
+1- PRISMA
+For sync new schema with history:
+  npx prisma migrate dev --name init
+
+Visual UI:
+  npx prisma studio
+
