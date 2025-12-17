@@ -1,6 +1,8 @@
 1- PRISMA
-For sync new schema with history:
-  npx prisma migrate dev --name init
+Migration, for sync new schema with DB:
+  npx prisma migrate dev --name XXXXX
+  To generate the prisma client based on the prisma schema for type-safety:
+    npx prisma generate
 
 Visual UI:
   npx prisma studio
