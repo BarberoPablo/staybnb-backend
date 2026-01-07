@@ -5,12 +5,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDraftListingDto } from './dto/create-draft-listing.dto';
+import { DraftListing, Listing } from '@prisma/client';
 
 @Injectable()
 export class DraftListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(hostId: string, dto: CreateDraftListingDto) {
+  create(hostId: string, dto: CreateDraftListingDto): Promise<DraftListing> {
     return this.prisma.draftListing.create({
       data: {
         ...dto,
@@ -19,7 +20,7 @@ export class DraftListingsService {
     });
   }
 
-  async complete(draftId: string) {
+  async complete(draftId: string): Promise<Listing> {
     const draft = await this.prisma.draftListing.findUnique({
       where: { id: draftId },
     });
@@ -48,5 +49,12 @@ export class DraftListingsService {
     ]);
 
     return listing;
+  }
+
+  findAll(hostId: string): Promise<DraftListing[]> {
+    return this.prisma.draftListing.findMany({
+      where: { hostId },
+      orderBy: { updatedAt: 'desc' },
+    });
   }
 }
