@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { getMockUserId } from 'src/auth.mock';
 import { ListingDto } from 'src/listings/dto/listing.dto';
 import { mapListingToDto } from 'src/listings/dto/listings.mapper';
 import { mapDraftListingToDto } from './draft-listings.mapper';
@@ -12,23 +13,30 @@ export class DraftListingsController {
 
   @Post()
   async create(@Body() dto: CreateDraftListingDto): Promise<DraftListingDto> {
-    const FAKE_USER_ID = '0013b1f';
-    const draft = await this.service.create(FAKE_USER_ID, dto);
+    const hostId = getMockUserId();
+    const draft = await this.service.create(hostId, dto);
     return mapDraftListingToDto(draft);
   }
 
   @Post(':id/complete')
   async complete(@Param('id') id: string): Promise<ListingDto> {
-    console.log('ID RAW:', JSON.stringify(id));
     const listing = await this.service.complete(id.trim());
     return mapListingToDto(listing);
   }
 
   @Get()
   async findAll(): Promise<DraftListingDto[]> {
-    const FAKE_USER_ID = '0013b1f';
-    const drafts = await this.service.findAll(FAKE_USER_ID);
+    const hostId = getMockUserId();
+    const drafts = await this.service.findAll(hostId);
 
     return drafts.map((draft) => mapDraftListingToDto(draft));
+  }
+
+  @Get(':id')
+  async find(@Param('id') id: string): Promise<DraftListingDto> {
+    const hostId = getMockUserId();
+    const draft = await this.service.find(hostId, id);
+
+    return mapDraftListingToDto(draft);
   }
 }

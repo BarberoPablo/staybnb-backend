@@ -57,4 +57,16 @@ export class DraftListingsService {
       orderBy: { updatedAt: 'desc' },
     });
   }
+
+  async find(hostId: string, id: string): Promise<DraftListing> {
+    const draft = await this.prisma.draftListing.findFirst({
+      where: { id, hostId },
+    });
+
+    if (!draft) {
+      throw new NotFoundException('Draft listing not found');
+    }
+
+    return draft;
+  }
 }
