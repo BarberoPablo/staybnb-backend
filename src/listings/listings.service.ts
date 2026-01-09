@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Listing } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -11,5 +11,17 @@ export class ListingsService {
       where: { hostId },
       orderBy: { updatedAt: 'desc' },
     });
+  }
+
+  async findById(hostId: string, id: string): Promise<Listing> {
+    const listing = await this.prisma.listing.findFirst({
+      where: { hostId, id },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    return listing;
   }
 }
