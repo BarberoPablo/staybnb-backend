@@ -4,9 +4,10 @@ import { ListingDto } from './listing.dto';
 export function mapListingToDto(listing: Listing): ListingDto {
   return {
     id: listing.id,
-    title: listing.title ?? undefined,
-    description: listing.description ?? undefined,
-    pricePerNight: listing.pricePerNight?.toNumber(),
+    title: listing.title,
+    description: listing.description,
+    pricePerNight: listing.pricePerNight.toNumber(),
+    status: listing.status,
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
   };
