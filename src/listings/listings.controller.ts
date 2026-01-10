@@ -1,5 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { getMockUserId } from 'src/auth.mock';
+import type { AuthUser } from 'src/auth/auth-user';
+import { CurrentUser } from 'src/auth/current-user.decorator';
 import { ListingDto } from './dto/listing.dto';
 import { mapListingToDto } from './dto/listings.mapper';
 import { ListingsService } from './listings.service';
@@ -9,28 +10,21 @@ export class ListingsController {
   constructor(private readonly service: ListingsService) {}
 
   @Get()
-  async findAll(): Promise<ListingDto[]> {
-    const hostId = getMockUserId();
+  async findAll(@CurrentUser() user: AuthUser): Promise<ListingDto[]> {
+    const hostId = user.id;
     const listings = await this.service.findByHostId(hostId);
 
     return listings.map((listing) => mapListingToDto(listing));
   }
 
   @Get(':id')
-  async find(@Param('id') id: string): Promise<ListingDto> {
-    const hostId = getMockUserId();
+  async find(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<ListingDto> {
+    const hostId = user.id;
     const listing = await this.service.findById(hostId, id);
 
     return mapListingToDto(listing);
   }
-
-  /* 
-  @Get(':id')
-    async find(@Param('id') id: string): Promise<DraftListingDto> {
-      const hostId = getMockUserId();
-      const draft = await this.service.find(hostId, id);
-  
-      return mapDraftListingToDto(draft);
-    }
-  */
 }
