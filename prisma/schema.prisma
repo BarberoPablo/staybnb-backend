@@ -18,6 +18,7 @@ model User {
   reservations  Reservation[]
   listings      Listing[]
   draftListings DraftListing[]
+  moderations ListingModeration[]
 }
 
 model Profile {
@@ -42,6 +43,7 @@ model Listing {
 
   amenities    Amenity[]     @relation("ListingAmenities")
   reservations Reservation[]
+  moderations ListingModeration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,6 +84,18 @@ model Amenity {
   listings Listing[] @relation("ListingAmenities")
 }
 
+model ListingModeration {
+  id        String   @id @default(uuid())
+  listingId String
+  adminId   String
+  action    ListingModerationAction
+  reason    String?
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  admin   User    @relation(fields: [adminId], references: [id])
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -91,4 +105,10 @@ enum ListingStatus {
   PUBLISHED
   PAUSED
   PENDING
+  REJECTED
+}
+
+enum ListingModerationAction {
+  APPROVED
+  REJECTED
 }
