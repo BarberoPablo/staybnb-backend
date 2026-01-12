@@ -27,9 +27,9 @@ export class AdminListingsService {
   /**
    * Approve a pending listing
    */
-  async approve(id: string): Promise<Listing> {
+  async approve(listingId: string, adminId: string): Promise<Listing> {
     const listing = await this.prisma.listing.findUnique({
-      where: { id },
+      where: { id: listingId },
     });
 
     if (!listing) {
@@ -40,11 +40,54 @@ export class AdminListingsService {
       throw new BadRequestException('Only pending listings can be approved');
     }
 
-    return this.prisma.listing.update({
-      where: { id },
-      data: {
-        status: ListingStatus.PUBLISHED,
-      },
+    const [updatedListing] = await this.prisma.$transaction([
+      this.prisma.listing.update({
+        where: { id: listingId },
+        data: { status: 'PUBLISHED' },
+      }),
+      this.prisma.listingModeration.create({
+        data: {
+          listingId,
+          adminId,
+          action: 'APPROVED',
+        },
+      }),
+    ]);
+
+    return updatedListing;
+  }
+
+  /**
+   * Reject a pending listing
+   */
+  async reject(
+    listingId: string,
+    adminId: string,
+    reason: string,
+  ): Promise<Listing> {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
     });
+
+    if (!listing || listing.status !== 'PENDING') {
+      throw new BadRequestException('Listing cannot be rejected');
+    }
+
+    const [updatedListing] = await this.prisma.$transaction([
+      this.prisma.listing.update({
+        where: { id: listingId },
+        data: { status: 'REJECTED' },
+      }),
+      this.prisma.listingModeration.create({
+        data: {
+          listingId,
+          adminId,
+          action: 'REJECTED',
+          reason,
+        },
+      }),
+    ]);
+
+    return updatedListing;
   }
 }
