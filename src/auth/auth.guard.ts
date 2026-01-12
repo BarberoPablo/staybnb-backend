@@ -10,7 +10,7 @@ export class AuthGuard implements CanActivate {
     // Temporary hardcoded user until real authentication
     const user: AuthUser = {
       id: '0013b1f',
-      role: 'USER',
+      role: 'ADMIN',
     };
 
     request.user = user;

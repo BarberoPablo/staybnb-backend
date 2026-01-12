@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { AdminListingsModule } from './admin/listings/admin-listings.module';
 import { AuthGuard } from './auth/auth.guard';
 import { DraftListingsModule } from './draft-listings/draft-listings.module';
 import { HealthModule } from './health/health.module';
@@ -14,6 +15,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     DraftListingsModule,
     ListingsModule,
+    AdminListingsModule,
   ],
   providers: [
     {
