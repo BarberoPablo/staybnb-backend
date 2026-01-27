@@ -8,6 +8,8 @@ import { mapListingToDto } from 'src/listings/dto/listings.mapper';
 import { Roles } from 'src/roles/roles.decorator';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { AdminListingsService } from './admin-listings.service';
+import { ListingModerationDto } from './dto/listing-moderation.dto';
+import { mapModerationToDto } from './dto/listing-moderation.mapper';
 import { RejectListingDto } from './dto/reject-listings.dto';
 
 @UseGuards(AuthGuard, RolesGuard)
@@ -20,6 +22,14 @@ export class AdminListingsController {
   async findPendings(): Promise<ListingDto[]> {
     const listings = await this.service.findPending();
     return listings.map(mapListingToDto);
+  }
+
+  @Get(':id/moderation-history')
+  async getModerationHistory(
+    @Param('id') listingId: string,
+  ): Promise<ListingModerationDto[]> {
+    const history = await this.service.getModerationHistory(listingId);
+    return history.map(mapModerationToDto);
   }
 
   @Post(':id/approve')
