@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Listing, ListingStatus } from '@prisma/client';
+import { Listing, ListingModeration, ListingStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -89,5 +89,24 @@ export class AdminListingsService {
     ]);
 
     return updatedListing;
+  }
+
+  /**
+   * Get moderation history for a listing
+   */
+  async getModerationHistory(listingId: string): Promise<ListingModeration[]> {
+    const listingExists = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { id: true },
+    });
+
+    if (!listingExists) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    return this.prisma.listingModeration.findMany({
+      where: { listingId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }
