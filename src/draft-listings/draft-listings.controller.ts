@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import type { AuthUser } from 'src/auth/auth-user';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { ListingDto } from 'src/listings/dto/listing.dto';
 import { mapListingToDto } from 'src/listings/dto/listings.mapper';
@@ -8,6 +9,7 @@ import { DraftListingsService } from './draft-listings.service';
 import { CreateDraftListingDto } from './dto/create-draft-listing.dto';
 import { DraftListingDto } from './dto/draft-listing.dto';
 
+@UseGuards(AuthGuard)
 @Controller('draft-listings')
 export class DraftListingsController {
   constructor(private readonly service: DraftListingsService) {}
