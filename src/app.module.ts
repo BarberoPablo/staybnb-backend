@@ -6,6 +6,7 @@ import { DraftListingsModule } from './draft-listings/draft-listings.module';
 import { HealthModule } from './health/health.module';
 import { HostListingsModule } from './host/listings/host-listings.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { PublicListingsModule } from './public/listings/public-listings.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module';
     DraftListingsModule,
     HostListingsModule,
     AdminListingsModule,
+    PublicListingsModule,
   ],
   providers: [
     {
