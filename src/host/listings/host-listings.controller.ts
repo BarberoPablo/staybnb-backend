@@ -7,7 +7,7 @@ import { mapListingToDto } from '../../listings/dto/listings.mapper';
 import { HostListingsService } from './host-listings.service';
 
 @UseGuards(AuthGuard)
-@Controller('listings')
+@Controller('host/listings')
 export class HostListingsController {
   constructor(private readonly service: HostListingsService) {}
 
