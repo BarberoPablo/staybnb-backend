@@ -2,13 +2,14 @@ import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import type { AuthUser } from 'src/auth/auth-user';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
-import { ListingDto } from './dto/listing.dto';
-import { mapListingToDto } from './dto/listings.mapper';
-import { ListingsService } from './listings.service';
+import { ListingDto } from '../../listings/dto/listing.dto';
+import { mapListingToDto } from '../../listings/dto/listings.mapper';
+import { HostListingsService } from './host-listings.service';
 
+@UseGuards(AuthGuard)
 @Controller('listings')
-export class ListingsController {
-  constructor(private readonly service: ListingsService) {}
+export class HostListingsController {
+  constructor(private readonly service: HostListingsService) {}
 
   @Get()
   async findAll(@CurrentUser() user: AuthUser): Promise<ListingDto[]> {
@@ -30,7 +31,6 @@ export class ListingsController {
   }
 
   @Post(':id/resubmit')
-  @UseGuards(AuthGuard)
   resubmitListing(
     @Param('id') listingId: string,
     @CurrentUser() user: AuthUser,
