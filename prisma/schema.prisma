@@ -15,9 +15,6 @@ model User {
   updatedAt  DateTime @updatedAt
 
   profile       Profile?
-  reservations  Reservation[]
-  listings      Listing[]
-  draftListings DraftListing[]
   moderations   ListingModeration[]
 }
 
@@ -28,8 +25,11 @@ model Profile {
   avatarUrl String?
   bio       String?
 
-  user      User       @relation(fields: [id], references: [id], onDelete: Cascade)
-  favorites Favorite[]
+  user          User           @relation(fields: [id], references: [id], onDelete: Cascade)
+  favorites     Favorite[]
+  draftListings DraftListing[]
+  reservations  Reservation[]
+  listings      Listing[]
 }
 
 model Listing {
@@ -39,7 +39,7 @@ model Listing {
   pricePerNight Decimal       @db.Decimal(10, 2)
   status        ListingStatus @default(PENDING)
   hostId        String
-  host          User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  host          Profile          @relation(fields: [hostId], references: [id], onDelete: Cascade)
   images        String[]
 
   // Structure
@@ -68,11 +68,11 @@ model Listing {
   minCancelDays Int    @default(3)
 
   privacyType  PrivacyType         @default(PRIVATE)
-  favorites     Favorite[]
+  favorites    Favorite[]
   propertyType PropertyType
-  amenities     Amenity[]           @relation("ListingAmenities")
-  reservations  Reservation[]
-  moderations   ListingModeration[]
+  amenities    Amenity[]           @relation("ListingAmenities")
+  reservations Reservation[]
+  moderations  ListingModeration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,16 +84,53 @@ model Listing {
 }
 
 model DraftListing {
-  id            String   @id @default(uuid())
+  id String @id @default(uuid())
+
+  // Core
   title         String?
   description   String?
   pricePerNight Decimal? @db.Decimal(10, 2)
 
-  hostId String
-  host   User   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  images       String[] @default([])
+  amenities    String[] @default([])
+  currentStep  Int      @default(0)
+  visitedSteps Int[]    @default([])
+  promotions   Json     @default("[]")
+
+  // Structure
+  beds      Int?
+  bedrooms  Int?
+  bathrooms Int?
+
+  // Guest limits
+  maxAdults   Int?
+  maxChildren Int?
+  maxInfants  Int?
+  maxPets     Int?
+  maxGuests   Int?
+
+  // Location
+  city     String?
+  country  String?
+  lat      Float?
+  lng      Float?
+  location Json?
+
+  // Rules
+  checkInTime   String?
+  checkOutTime  String?
+  minCancelDays Int?
+
+  // Meta
+  privacyType  PrivacyType?
+  propertyType PropertyType?
+
+  hostId  String
+  profile Profile @relation(fields: [hostId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId    String?
 }
 
 model Reservation {
@@ -105,7 +142,7 @@ model Reservation {
   endDate    DateTime
   totalPrice Decimal  @db.Decimal(10, 2)
 
-  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user    Profile?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
