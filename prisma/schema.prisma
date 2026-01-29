@@ -41,7 +41,8 @@ model Listing {
   hostId        String
   host          Profile          @relation(fields: [hostId], references: [id], onDelete: Cascade)
   images        String[]
-
+  promotions   Json     @default("[]")
+  
   // Structure
   beds      Int
   bedrooms  Int
