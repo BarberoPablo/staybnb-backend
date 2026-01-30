@@ -10,7 +10,7 @@ import { CreateDraftListingDto } from './dto/create-draft-listing.dto';
 import { DraftListingDto } from './dto/draft-listing.dto';
 
 @UseGuards(AuthGuard)
-@Controller('draft-listings')
+@Controller('host/draft-listings')
 export class DraftListingsController {
   constructor(private readonly service: DraftListingsService) {}
 
@@ -25,8 +25,11 @@ export class DraftListingsController {
   }
 
   @Post(':id/complete')
-  async complete(@Param('id') id: string): Promise<ListingDto> {
-    const listing = await this.service.complete(id.trim());
+  async complete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ListingDto> {
+    const listing = await this.service.complete(id.trim(), user.id);
     return mapListingToDto(listing);
   }
 

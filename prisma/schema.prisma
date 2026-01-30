@@ -42,6 +42,7 @@ model Listing {
   host          Profile          @relation(fields: [hostId], references: [id], onDelete: Cascade)
   images        String[]
   promotions   Json     @default("[]")
+  score   Json     @default("[]")
   
   // Structure
   beds      Int
