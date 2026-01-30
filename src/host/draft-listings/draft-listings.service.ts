@@ -3,21 +3,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateDraftListingDto } from './dto/create-draft-listing.dto';
 import { DraftListing, Listing } from '@prisma/client';
-import { Location } from 'src/listings/dto/listing.types';
+import { DraftListingLocation } from 'src/listings/dto/listing.types';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class DraftListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(hostId: string, dto: CreateDraftListingDto): Promise<DraftListing> {
+  create(hostId: string): Promise<DraftListing> {
     return this.prisma.draftListing.create({
-      data: {
-        ...dto,
-        hostId,
-      },
+      data: { hostId },
     });
   }
 
@@ -37,7 +33,7 @@ export class DraftListingsService {
         data: {
           title: draft.title!,
           description: draft.description!,
-          pricePerNight: draft.pricePerNight!,
+          nightPrice: draft.nightPrice!,
           images: draft.images,
           beds: draft.beds!,
           bedrooms: draft.bedrooms!,
@@ -97,7 +93,7 @@ export class DraftListingsService {
     const requiredFields: (keyof DraftListing)[] = [
       'title',
       'description',
-      'pricePerNight',
+      'nightPrice',
       'images',
       'beds',
       'bedrooms',
@@ -118,7 +114,7 @@ export class DraftListingsService {
       'privacyType',
       'propertyType',
     ];
-    const requiredLocationFields: (keyof Location)[] = [
+    const requiredLocationFields: (keyof DraftListingLocation)[] = [
       'lat',
       'lng',
       'city',

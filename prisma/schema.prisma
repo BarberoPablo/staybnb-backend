@@ -36,7 +36,7 @@ model Listing {
   id            String        @id @default(uuid())
   title         String
   description   String
-  pricePerNight Decimal       @db.Decimal(10, 2)
+  nightPrice Decimal       @db.Decimal(10, 2)
   status        ListingStatus @default(PENDING)
   hostId        String
   host          Profile          @relation(fields: [hostId], references: [id], onDelete: Cascade)
@@ -82,16 +82,16 @@ model Listing {
   @@index([status])
   @@index([city])
   @@index([lat, lng])
-  @@index([pricePerNight])
+  @@index([nightPrice])
 }
 
 model DraftListing {
   id String @id @default(uuid())
 
   // Core
-  title         String?
-  description   String?
-  pricePerNight Decimal? @db.Decimal(10, 2)
+  title         String @default("")
+  description   String @default("")
+  nightPrice  Int @default(40)
 
   images       String[] @default([])
   amenities    String[] @default([])
@@ -100,39 +100,38 @@ model DraftListing {
   promotions   Json     @default("[]")
 
   // Structure
-  beds      Int?
-  bedrooms  Int?
-  bathrooms Int?
+  beds      Int @default(0)
+  bedrooms  Int @default(0)
+  bathrooms Int @default(0)
 
   // Guest limits
-  maxAdults   Int?
-  maxChildren Int?
-  maxInfants  Int?
-  maxPets     Int?
-  maxGuests   Int?
+  maxAdults   Int @default(2)
+  maxChildren Int @default(0)
+  maxInfants  Int @default(0)
+  maxPets     Int @default(0)
+  maxGuests   Int @default(2)
 
   // Location
-  city     String?
-  country  String?
-  lat      Float?
-  lng      Float?
-  location Json?
+  city     String @default("")
+  country  String @default("")
+  lat      Float @default(0)
+  lng      Float @default(0)
+  location Json @default("{}")
 
   // Rules
-  checkInTime   String?
-  checkOutTime  String?
-  minCancelDays Int?
+  checkInTime   String @default("15:00")
+  checkOutTime  String @default("11:00")
+  minCancelDays Int @default(3)
 
   // Meta
-  privacyType  PrivacyType?
-  propertyType PropertyType?
+  privacyType  PrivacyType @default(ENTIRE)
+  propertyType PropertyType @default(HOUSE)
 
   hostId  String
   profile Profile @relation(fields: [hostId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String?
 }
 
 model Reservation {

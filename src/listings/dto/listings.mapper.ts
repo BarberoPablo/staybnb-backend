@@ -6,7 +6,7 @@ export function mapListingToDto(listing: Listing): ListingDto {
     id: listing.id,
     title: listing.title,
     description: listing.description,
-    pricePerNight: listing.pricePerNight.toNumber(),
+    nightPrice: listing.nightPrice.toNumber(),
     status: listing.status,
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
