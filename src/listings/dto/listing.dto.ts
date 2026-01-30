@@ -4,8 +4,9 @@ export class ListingDto {
   id: string;
   title: string;
   description: string;
-  pricePerNight: number;
+  nightPrice: number;
   status: ListingStatus;
   createdAt: Date;
   updatedAt: Date;
+  //Complete
 }

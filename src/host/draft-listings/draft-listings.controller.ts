@@ -1,13 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import type { AuthUser } from 'src/auth/auth-user';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { ListingDto } from 'src/listings/dto/listing.dto';
 import { mapListingToDto } from 'src/listings/dto/listings.mapper';
-import { mapDraftListingToDto } from './draft-listings.mapper';
+import { mapDraftListingDbToResponse } from './draft-listings.mapper';
 import { DraftListingsService } from './draft-listings.service';
-import { CreateDraftListingDto } from './dto/create-draft-listing.dto';
-import { DraftListingDto } from './dto/draft-listing.dto';
+import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
 
 @UseGuards(AuthGuard)
 @Controller('host/draft-listings')
@@ -17,14 +16,13 @@ export class DraftListingsController {
   @Post()
   async create(
     @CurrentUser() user: AuthUser,
-    @Body() dto: CreateDraftListingDto,
-  ): Promise<DraftListingDto> {
+  ): Promise<DraftListingResponseDto> {
     const hostId = user.id;
-    const draft = await this.service.create(hostId, dto);
-    return mapDraftListingToDto(draft);
+    const draft = await this.service.create(hostId);
+    return mapDraftListingDbToResponse(draft);
   }
 
-  @Post(':id/complete')
+  @Post(':id/publish')
   async complete(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
@@ -34,21 +32,23 @@ export class DraftListingsController {
   }
 
   @Get()
-  async findAll(@CurrentUser() user: AuthUser): Promise<DraftListingDto[]> {
+  async findAll(
+    @CurrentUser() user: AuthUser,
+  ): Promise<DraftListingResponseDto[]> {
     const hostId = user.id;
     const drafts = await this.service.findAll(hostId);
 
-    return drafts.map((draft) => mapDraftListingToDto(draft));
+    return drafts.map((draft) => mapDraftListingDbToResponse(draft));
   }
 
   @Get(':id')
   async find(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-  ): Promise<DraftListingDto> {
+  ): Promise<DraftListingResponseDto> {
     const hostId = user.id;
     const draft = await this.service.find(hostId, id);
 
-    return mapDraftListingToDto(draft);
+    return mapDraftListingDbToResponse(draft);
   }
 }
