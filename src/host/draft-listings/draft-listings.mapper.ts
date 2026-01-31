@@ -1,11 +1,10 @@
+import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
 import {
   DraftListingLocation,
   DraftListingLocationDB,
   Promotion,
 } from 'src/listings/dto/listing.types';
 import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
-import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
-import { parse } from 'path';
 
 export function mapDraftListingDbToResponse(
   draft: PrismaDraftListing,
