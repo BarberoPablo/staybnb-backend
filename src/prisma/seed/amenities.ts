@@ -1,24 +1,10 @@
+import { AmenityCategory } from '@prisma/client';
 import 'dotenv/config';
-import { PrismaClient, AmenityCategory } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { createPrismaClient } from './prisma.factory';
 
-const connectionString = process.env.DATABASE_URL;
+const { prisma, disconnect } = createPrismaClient();
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not defined');
-}
-
-const pool = new Pool({
-  connectionString,
-  max: 5,
-});
-
-const prisma = new PrismaClient({
-  adapter: new PrismaPg(pool),
-});
-
-async function seedAmenities() {
+async function main() {
   await prisma.amenity.createMany({
     data: [
       // GENERAL
@@ -102,16 +88,4 @@ async function seedAmenities() {
   });
 }
 
-async function main() {
-  await seedAmenities();
-}
-
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-    await pool.end();
-  });
+main().catch(console.error).finally(disconnect);
