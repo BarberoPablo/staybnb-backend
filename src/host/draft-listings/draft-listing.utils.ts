@@ -5,10 +5,26 @@ export const completedDraftListingTemplate = {
   description: 'A wonderful place to stay.',
   nightPrice: 100,
   images: ['https://example.com/default-image.jpg'],
-  amenities: ['1', '2', '3'],
+  amenities: [
+    'cf2f1f8d-68e9-436a-9caa-a1fb46726668',
+    '03882c1e-3784-401c-8fd7-dfc9b31232d4',
+    'bb0e32c5-41e6-4472-a3c8-4dd4d3dcfb14',
+    '0aabd0f3-e865-4f20-aa41-78bcbc881bf8',
+  ],
   currentStep: 3,
   visitedSteps: [1, 2],
-  promotions: [],
+  promotions: [
+    {
+      minNights: 7,
+      discountPercentage: 5,
+      description: 'Stay 7 nights or more and get 5% off!',
+    },
+    {
+      minNights: 10,
+      discountPercentage: 10,
+      description: 'Stay 10 nights or more and get 10% off!',
+    },
+  ],
   beds: 3,
   bedrooms: 1,
   bathrooms: 1,
