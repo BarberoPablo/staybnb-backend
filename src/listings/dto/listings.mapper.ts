@@ -1,35 +1,22 @@
-import { ListingResponseDto } from './listing-response.dto';
 import {
-  ListingLocation,
-  ListingWithAmenities,
-  Promotion,
-} from './listing.types';
+  parseLocationFromDBToResponse,
+  parsePromotionsFromDBToResponse,
+} from 'src/host/draft-listings/draft-listings.mapper';
+import { ListingResponseDto } from './listing-response.dto';
+import { ListingWithAmenities } from './listing.types';
 
 export function mapListingToResponse(
   listing: ListingWithAmenities,
 ): ListingResponseDto {
+  const location = parseLocationFromDBToResponse(listing.location);
+  const promotions = parsePromotionsFromDBToResponse(listing.promotions);
+
   return {
     id: listing.id,
     title: listing.title,
     description: listing.description,
     nightPrice: listing.nightPrice,
-
-    propertyType: listing.propertyType,
-    privacyType: listing.privacyType,
-
-    location: {
-      city: listing.city,
-      country: listing.country,
-      lat: listing.lat,
-      lng: listing.lng,
-      ...(listing.location as Omit<
-        ListingLocation,
-        'city' | 'country' | 'lat' | 'lng'
-      >),
-    },
-
     images: listing.images,
-    promotions: listing.promotions as Promotion[],
 
     structure: {
       bedrooms: listing.bedrooms,
@@ -44,6 +31,12 @@ export function mapListingToResponse(
       infant: { min: 0, max: listing.maxInfants },
       pets: { min: 0, max: listing.maxPets },
     },
+
+    location,
+    promotions,
+
+    propertyType: listing.propertyType,
+    privacyType: listing.privacyType,
 
     amenities: listing.amenities.map((amenity) => amenity.amenityId),
 

@@ -1,6 +1,10 @@
 import { Prisma } from '@prisma/client';
 
-export type DraftListingLocationDB = {
+export type DraftListingLocation = {
+  country: string;
+  city: string;
+  lat: number;
+  lng: number;
   state: string;
   street: string;
   postcode: string;

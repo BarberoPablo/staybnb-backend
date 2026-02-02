@@ -67,4 +67,12 @@ export class DraftListingsController {
     await this.service.update(user.id, id, body.step, body.data);
     return { success: true };
   }
+
+  @Patch(':id/auto-complete')
+  async autoCompleteListing(
+    @Param('id') listingId: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.service.autoComplete(listingId, user.id);
+  }
 }
