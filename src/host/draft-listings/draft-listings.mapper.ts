@@ -1,7 +1,7 @@
 import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
 import {
-  DraftListingLocation,
   DraftListingLocationDB,
+  ListingLocation,
   Promotion,
 } from 'src/listings/dto/listing.types';
 import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
@@ -12,7 +12,7 @@ export function mapDraftListingDbToResponse(
   const locationDB = parseLocation(draft.location);
   const promotionsDB = parsePromotion(draft.promotions);
 
-  const location: DraftListingLocation = {
+  const location: ListingLocation = {
     formatted: locationDB.formatted,
     housenumber: locationDB.housenumber,
     street: locationDB.street,

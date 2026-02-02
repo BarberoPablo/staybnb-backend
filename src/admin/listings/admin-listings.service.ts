@@ -21,6 +21,9 @@ export class AdminListingsService {
       orderBy: {
         createdAt: 'asc',
       },
+      include: {
+        amenities: true,
+      },
     });
   }
 
