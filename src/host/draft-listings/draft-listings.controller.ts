@@ -55,7 +55,7 @@ export class DraftListingsController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<{ listingId: string }> {
-    return this.service.complete(id.trim(), user.id);
+    return this.service.complete(user.id, id.trim());
   }
 
   @Patch(':id')
