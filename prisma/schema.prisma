@@ -112,10 +112,6 @@ model DraftListing {
   maxGuests   Int @default(2)
 
   // Location
-  city     String @default("")
-  country  String @default("")
-  lat      Float @default(0)
-  lng      Float @default(0)
   location Json @default("{}")
 
   // Rules

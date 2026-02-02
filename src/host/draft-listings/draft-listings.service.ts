@@ -6,8 +6,13 @@ import {
 import { DraftListing } from '@prisma/client';
 import { ListingLocation } from 'src/listings/dto/listing.types';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { completedDraftListingTemplate } from './draft-listing.utils';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
+import {
+  parseLocationFromDBToResponse,
+  parsePromotionsFromDBToResponse,
+} from './draft-listings.mapper';
 
 @Injectable()
 export class DraftListingsService {
@@ -89,10 +94,6 @@ export class DraftListingsService {
       'maxChildren',
       'maxInfants',
       'maxPets',
-      'city',
-      'country',
-      'lat',
-      'lng',
       'location',
       'checkInTime',
       'checkOutTime',
@@ -233,7 +234,14 @@ export class DraftListingsService {
     return data;
   }
 
+  /**
+   * Maps a DraftListing to a Listing creation object. We can safely assume
+   * that the draft is complete if we called `assertDraftIsComplete` before.
+   * @param draft The draft listing to map
+   */
   private mapDraftToListing(draft: DraftListing) {
+    const location = parseLocationFromDBToResponse(draft.location);
+    const promotions = parsePromotionsFromDBToResponse(draft.promotions);
     return {
       host: {
         connect: { id: draft.hostId },
@@ -243,9 +251,6 @@ export class DraftListingsService {
       description: draft.description,
       nightPrice: draft.nightPrice,
       images: draft.images,
-
-      promotions: draft.promotions!,
-      location: draft.location!,
 
       beds: draft.beds,
       bedrooms: draft.bedrooms,
@@ -257,10 +262,20 @@ export class DraftListingsService {
       maxInfants: draft.maxInfants,
       maxPets: draft.maxPets,
 
-      city: draft.city,
-      country: draft.country,
-      lat: draft.lat,
-      lng: draft.lng,
+      city: location.city,
+      country: location.country,
+      lat: location.lat,
+      lng: location.lng,
+
+      location: {
+        formatted: location.formatted,
+        housenumber: location.housenumber,
+        street: location.street,
+        state: location.state,
+        postcode: location.postcode,
+        timezone: location.timezone,
+      },
+      promotions,
 
       checkInTime: draft.checkInTime,
       checkOutTime: draft.checkOutTime,
@@ -269,5 +284,24 @@ export class DraftListingsService {
       propertyType: draft.propertyType,
       privacyType: draft.privacyType,
     };
+  }
+
+  async autoComplete(draftId, hostId: string) {
+    const draft = await this.prisma.draftListing.findFirst({
+      where: { id: draftId, hostId },
+    });
+
+    if (!draft) {
+      throw new NotFoundException('Draft listing not found');
+    }
+
+    await this.prisma.draftListing.update({
+      where: { id: draftId, hostId },
+      data: {
+        ...completedDraftListingTemplate,
+      },
+    });
+
+    return { success: true };
   }
 }

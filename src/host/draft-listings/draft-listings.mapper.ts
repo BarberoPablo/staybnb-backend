@@ -1,7 +1,6 @@
 import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
 import {
-  DraftListingLocationDB,
-  ListingLocation,
+  DraftListingLocation,
   Promotion,
 } from 'src/listings/dto/listing.types';
 import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
@@ -9,21 +8,9 @@ import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
 export function mapDraftListingDbToResponse(
   draft: PrismaDraftListing,
 ): DraftListingResponseDto {
-  const locationDB = parseLocation(draft.location);
-  const promotionsDB = parsePromotion(draft.promotions);
+  const locationResponse = parseLocationFromDBToResponse(draft.location);
+  const promotionsResponse = parsePromotionsFromDBToResponse(draft.promotions);
 
-  const location: ListingLocation = {
-    formatted: locationDB.formatted,
-    housenumber: locationDB.housenumber,
-    street: locationDB.street,
-    state: locationDB.state,
-    postcode: locationDB.postcode,
-    timezone: locationDB.timezone,
-    city: draft.city,
-    country: draft.country,
-    lat: draft.lat,
-    lng: draft.lng,
-  };
   const structure = {
     beds: draft.beds,
     bedrooms: draft.bedrooms,
@@ -42,13 +29,13 @@ export function mapDraftListingDbToResponse(
     hostId: draft.hostId,
     propertyType: draft.propertyType,
     privacyType: draft.privacyType,
-    location,
+    location: locationResponse,
     checkInTime: draft.checkInTime,
     checkOutTime: draft.checkOutTime,
     title: draft.title,
     description: draft.description,
     nightPrice: draft.nightPrice,
-    promotions: promotionsDB,
+    promotions: promotionsResponse,
     structure,
     guestLimits,
     amenities: draft.amenities,
@@ -61,14 +48,39 @@ export function mapDraftListingDbToResponse(
   };
 }
 
-function parseLocation(location: Prisma.JsonValue): DraftListingLocationDB {
+/**
+ * Runtime guard between Prisma JsonValue and the API response.
+ *
+ * DraftListing stores `location` as Json to allow flexible, step-based editing.
+ * Prisma therefore returns it as `JsonValue`, which provides no type safety.
+ *
+ * This function exists to:
+ * - centralize the cast in one place
+ * - fail fast if the persisted data is missing or corrupted
+ * - avoid unsafe `as DraftListingLocationDB` usage scattered across the codebase
+ *
+ * IMPORTANT:
+ * This does NOT transform data. It only validates the minimal shape and asserts the contract expected by the API.
+ */
+export function parseLocationFromDBToResponse(
+  location: Prisma.JsonValue,
+): DraftListingLocation {
   if (!location || typeof location !== 'object') {
     throw new Error('Invalid location');
   }
-  return location as DraftListingLocationDB;
+  return location as DraftListingLocation;
 }
 
-function parsePromotion(promotion: Prisma.JsonValue): Promotion[] {
+/**
+ * Runtime guard for promotions stored as Json in DraftListing.
+ *
+ * Promotions are persisted as Json to keep DraftListing flexible, but the API expects a strongly-typed `Promotion[]`.
+ *
+ * This function enforces that boundary and prevents leaking, invalid or malformed Json data into the response layer.
+ */
+export function parsePromotionsFromDBToResponse(
+  promotion: Prisma.JsonValue,
+): Promotion[] {
   if (!promotion || !Array.isArray(promotion)) {
     throw new Error('Invalid promotion');
   }
