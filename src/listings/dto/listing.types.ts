@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 export type DraftListingLocationDB = {
   state: string;
   street: string;
@@ -7,7 +9,7 @@ export type DraftListingLocationDB = {
   housenumber: string;
 };
 
-export type DraftListingLocation = {
+export type ListingLocation = {
   country: string;
   city: string;
   lat: number;
@@ -45,3 +47,9 @@ export type GuestLimits = {
   infant: { min: number; max: number };
   pets: { min: number; max: number };
 };
+
+export type ListingWithAmenities = Prisma.ListingGetPayload<{
+  include: {
+    amenities: true;
+  };
+}>;
