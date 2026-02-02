@@ -6,18 +6,24 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class PublicListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(): Promise<Listing[]> {
+  findAll() {
     return this.prisma.listing.findMany({
       where: { status: ListingStatus.PUBLISHED },
+      include: {
+        amenities: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findById(id: string): Promise<Listing> {
+  async findById(id: string) {
     const listing = await this.prisma.listing.findFirst({
       where: {
         id,
         status: ListingStatus.PUBLISHED,
+      },
+      include: {
+        amenities: true,
       },
     });
 

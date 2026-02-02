@@ -10,8 +10,6 @@ import {
 import type { AuthUser } from 'src/auth/auth-user';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
-import { ListingDto } from 'src/listings/dto/listing.dto';
-import { mapListingToDto } from 'src/listings/dto/listings.mapper';
 import { mapDraftListingDbToResponse } from './draft-listings.mapper';
 import { DraftListingsService } from './draft-listings.service';
 import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
@@ -53,12 +51,11 @@ export class DraftListingsController {
   }
 
   @Post(':id/publish')
-  async complete(
+  complete(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
-  ): Promise<ListingDto> {
-    const listing = await this.service.complete(id.trim(), user.id);
-    return mapListingToDto(listing);
+  ): Promise<{ listingId: string }> {
+    return this.service.complete(id.trim(), user.id);
   }
 
   @Patch(':id')

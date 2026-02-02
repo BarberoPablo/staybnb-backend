@@ -3,8 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DraftListing, Listing } from '@prisma/client';
-import { DraftListingLocation } from 'src/listings/dto/listing.types';
+import { DraftListing } from '@prisma/client';
+import { ListingLocation } from 'src/listings/dto/listing.types';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
@@ -19,8 +19,8 @@ export class DraftListingsService {
     });
   }
 
-  async complete(draftId: string, hostId: string): Promise<Listing> {
-    const draft = await this.prisma.draftListing.findFirst({
+  async complete(hostId: string, draftId: string) {
+    const draft = await this.prisma.draftListing.findUnique({
       where: { id: draftId, hostId },
     });
 
@@ -30,46 +30,30 @@ export class DraftListingsService {
 
     this.assertDraftIsComplete(draft);
 
-    const [listing] = await this.prisma.$transaction([
-      this.prisma.listing.create({
-        data: {
-          title: draft.title!,
-          description: draft.description!,
-          nightPrice: draft.nightPrice!,
-          images: draft.images,
-          beds: draft.beds!,
-          bedrooms: draft.bedrooms!,
-          bathrooms: draft.bathrooms!,
-          maxGuests: draft.maxGuests!,
-          maxAdults: draft.maxAdults!,
-          maxChildren: draft.maxChildren!,
-          maxInfants: draft.maxInfants!,
-          maxPets: draft.maxPets!,
-          city: draft.city!,
-          country: draft.country!,
-          lat: draft.lat!,
-          lng: draft.lng!,
-          location: draft.location!,
-          checkInTime: draft.checkInTime!,
-          checkOutTime: draft.checkOutTime!,
-          minCancelDays: draft.minCancelDays!,
-          privacyType: draft.privacyType!,
-          propertyType: draft.propertyType!,
-          hostId: draft.hostId,
-          promotions: draft.promotions ?? [],
-          score: {
-            value: 0,
-            reviews: [],
-          },
-          status: 'PENDING',
-        },
-      }),
-      this.prisma.draftListing.delete({
-        where: { id: draftId },
-      }),
-    ]);
+    return this.prisma.$transaction(async (tx) => {
+      const listing = await tx.listing.create({
+        data: this.mapDraftToListing(draft),
+      });
 
-    return listing;
+      if (
+        draft.amenities &&
+        Array.isArray(draft.amenities) &&
+        draft.amenities.length > 0
+      ) {
+        await tx.listingAmenity.createMany({
+          data: draft.amenities.map((amenityId) => ({
+            listingId: listing.id,
+            amenityId: amenityId,
+          })),
+        });
+      }
+
+      await tx.draftListing.delete({
+        where: { id: draft.id },
+      });
+
+      return { listingId: listing.id };
+    });
   }
 
   findAll(hostId: string): Promise<DraftListing[]> {
@@ -116,7 +100,7 @@ export class DraftListingsService {
       'privacyType',
       'propertyType',
     ];
-    const requiredLocationFields: (keyof DraftListingLocation)[] = [
+    const requiredLocationFields: (keyof ListingLocation)[] = [
       'lat',
       'lng',
       'city',
@@ -247,5 +231,43 @@ export class DraftListingsService {
     }
 
     return data;
+  }
+
+  private mapDraftToListing(draft: DraftListing) {
+    return {
+      host: {
+        connect: { id: draft.hostId },
+      },
+
+      title: draft.title,
+      description: draft.description,
+      nightPrice: draft.nightPrice,
+      images: draft.images,
+
+      promotions: draft.promotions!,
+      location: draft.location!,
+
+      beds: draft.beds,
+      bedrooms: draft.bedrooms,
+      bathrooms: draft.bathrooms,
+
+      maxGuests: draft.maxGuests,
+      maxAdults: draft.maxAdults,
+      maxChildren: draft.maxChildren,
+      maxInfants: draft.maxInfants,
+      maxPets: draft.maxPets,
+
+      city: draft.city,
+      country: draft.country,
+      lat: draft.lat,
+      lng: draft.lng,
+
+      checkInTime: draft.checkInTime,
+      checkOutTime: draft.checkOutTime,
+      minCancelDays: draft.minCancelDays,
+
+      propertyType: draft.propertyType,
+      privacyType: draft.privacyType,
+    };
   }
 }

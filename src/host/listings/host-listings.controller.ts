@@ -2,8 +2,8 @@ import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import type { AuthUser } from 'src/auth/auth-user';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
-import { ListingDto } from '../../listings/dto/listing.dto';
-import { mapListingToDto } from '../../listings/dto/listings.mapper';
+import { ListingResponseDto } from '../../listings/dto/listing-response.dto';
+import { mapListingToResponse } from '../../listings/dto/listings.mapper';
 import { HostListingsService } from './host-listings.service';
 
 @UseGuards(AuthGuard)
@@ -12,22 +12,22 @@ export class HostListingsController {
   constructor(private readonly service: HostListingsService) {}
 
   @Get()
-  async findAll(@CurrentUser() user: AuthUser): Promise<ListingDto[]> {
+  async findAll(@CurrentUser() user: AuthUser): Promise<ListingResponseDto[]> {
     const hostId = user.id;
     const listings = await this.service.findByHostId(hostId);
 
-    return listings.map((listing) => mapListingToDto(listing));
+    return listings.map((listing) => mapListingToResponse(listing));
   }
 
   @Get(':id')
   async find(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-  ): Promise<ListingDto> {
+  ): Promise<ListingResponseDto> {
     const hostId = user.id;
     const listing = await this.service.findById(hostId, id);
 
-    return mapListingToDto(listing);
+    return mapListingToResponse(listing);
   }
 
   @Post(':id/resubmit')

@@ -1,7 +1,7 @@
 import {
-  GuestLimits,
-  DraftListingLocation,
   DraftListingStructure,
+  GuestLimits,
+  ListingLocation,
   PrivacyType,
   Promotion,
   PropertyType,
@@ -12,7 +12,7 @@ export class DraftListingResponseDto {
   hostId: string;
   propertyType: PropertyType;
   privacyType: PrivacyType;
-  location: DraftListingLocation;
+  location: ListingLocation;
   checkInTime: string;
   checkOutTime: string;
   title: string;

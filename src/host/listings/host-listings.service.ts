@@ -4,23 +4,29 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Listing, ListingStatus } from '@prisma/client';
+import { ListingStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class HostListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findByHostId(hostId: string): Promise<Listing[]> {
+  findByHostId(hostId: string) {
     return this.prisma.listing.findMany({
       where: { hostId },
+      include: {
+        amenities: true,
+      },
       orderBy: { updatedAt: 'desc' },
     });
   }
 
-  async findById(hostId: string, id: string): Promise<Listing> {
+  async findById(hostId: string, id: string) {
     const listing = await this.prisma.listing.findFirst({
       where: { hostId, id },
+      include: {
+        amenities: true,
+      },
     });
 
     if (!listing) {
@@ -30,7 +36,7 @@ export class HostListingsService {
     return listing;
   }
 
-  async resubmit(listingId: string, hostId: string): Promise<Listing> {
+  async resubmit(listingId: string, hostId: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
     });
@@ -49,11 +55,13 @@ export class HostListingsService {
       );
     }
 
-    return this.prisma.listing.update({
+    this.prisma.listing.update({
       where: { id: listingId },
       data: {
         status: ListingStatus.PENDING,
       },
     });
+
+    return { success: true };
   }
 }
