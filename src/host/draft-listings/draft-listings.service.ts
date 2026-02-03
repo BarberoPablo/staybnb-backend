@@ -3,16 +3,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DraftListing } from '@prisma/client';
-import { ListingLocation } from 'src/listings/dto/listing.types';
+import { DraftListing, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { completedDraftListingTemplate } from './draft-listing.utils';
-import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
-import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
 import {
   parseLocationFromDBToResponse,
   parsePromotionsFromDBToResponse,
 } from './draft-listings.mapper';
+import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
+import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
+import { validateDraftForCompletion } from './validation/validate-complete-draft';
 
 @Injectable()
 export class DraftListingsService {
@@ -33,32 +33,46 @@ export class DraftListingsService {
       throw new NotFoundException('Draft listing not found');
     }
 
-    this.assertDraftIsComplete(draft);
+    validateDraftForCompletion(draft);
 
-    return this.prisma.$transaction(async (tx) => {
-      const listing = await tx.listing.create({
-        data: this.mapDraftToListing(draft),
-      });
-
-      if (
-        draft.amenities &&
-        Array.isArray(draft.amenities) &&
-        draft.amenities.length > 0
-      ) {
-        await tx.listingAmenity.createMany({
-          data: draft.amenities.map((amenityId) => ({
-            listingId: listing.id,
-            amenityId: amenityId,
-          })),
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const listing = await tx.listing.create({
+          data: this.mapDraftToListing(draft),
         });
-      }
 
-      await tx.draftListing.delete({
-        where: { id: draft.id },
+        if (draft.amenities?.length) {
+          const count = await tx.amenity.count({
+            where: { id: { in: draft.amenities } },
+          });
+
+          if (count !== draft.amenities.length) {
+            throw new BadRequestException('Invalid amenities');
+          }
+
+          await tx.listingAmenity.createMany({
+            data: draft.amenities.map((amenityId) => ({
+              listingId: listing.id,
+              amenityId,
+            })),
+          });
+        }
+
+        await tx.draftListing.delete({
+          where: { id: draft.id },
+        });
+
+        return { listingId: listing.id };
       });
-
-      return { listingId: listing.id };
-    });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2003'
+      ) {
+        throw new BadRequestException('Invalid amenities');
+      }
+      throw error;
+    }
   }
 
   findAll(hostId: string): Promise<DraftListing[]> {
@@ -78,68 +92,6 @@ export class DraftListingsService {
     }
 
     return draft;
-  }
-
-  private assertDraftIsComplete(draft: DraftListing) {
-    const requiredFields: (keyof DraftListing)[] = [
-      'title',
-      'description',
-      'nightPrice',
-      'images',
-      'beds',
-      'bedrooms',
-      'bathrooms',
-      'maxGuests',
-      'maxAdults',
-      'maxChildren',
-      'maxInfants',
-      'maxPets',
-      'location',
-      'checkInTime',
-      'checkOutTime',
-      'minCancelDays',
-      'privacyType',
-      'propertyType',
-    ];
-    const requiredLocationFields: (keyof ListingLocation)[] = [
-      'lat',
-      'lng',
-      'city',
-      'state',
-      'street',
-      'country',
-      'postcode',
-      'timezone',
-      'formatted',
-      'housenumber',
-    ];
-
-    for (const field of requiredFields) {
-      if (
-        draft[field] === null ||
-        draft[field] === undefined ||
-        (Array.isArray(draft[field]) && draft[field].length === 0)
-      ) {
-        throw new BadRequestException(
-          `Draft listing is incomplete. Missing: ${field}`,
-        );
-      }
-    }
-
-    for (const field of requiredLocationFields) {
-      if (
-        draft.location == null ||
-        draft.location == undefined ||
-        draft.location[field] === null ||
-        draft.location[field] === undefined ||
-        (Array.isArray(draft.location[field]) &&
-          draft.location[field].length === 0)
-      ) {
-        throw new BadRequestException(
-          `Draft listing location is incomplete. Missing: ${field}`,
-        );
-      }
-    }
   }
 
   async update(
