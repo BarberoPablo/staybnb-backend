@@ -83,6 +83,7 @@ model Listing {
   @@index([city])
   @@index([lat, lng])
   @@index([nightPrice])
+  @@index([hostId])
 }
 
 model DraftListing {
@@ -128,6 +129,8 @@ model DraftListing {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([hostId])
 }
 
 model Reservation {
@@ -143,6 +146,9 @@ model Reservation {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([userId])
 }
 
 model Amenity {
@@ -172,6 +178,9 @@ model ListingModeration {
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   admin   User    @relation(fields: [adminId], references: [id])
+
+  @@index([listingId])
+  @@index([adminId])
 }
 
 model Favorite {
