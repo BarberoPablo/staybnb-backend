@@ -1,15 +1,16 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import type { AuthUser } from 'src/auth/auth-user';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { CurrentUser } from 'src/auth/current-user.decorator';
+import type { AuthUser } from '@src/auth/auth-user';
+import { AuthGuard } from '@src/auth/auth.guard';
+import { CurrentUser } from '@src/auth/current-user.decorator';
 import { mapDraftListingDbToResponse } from './draft-listings.mapper';
 import { DraftListingsService } from './draft-listings.service';
 import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
@@ -74,5 +75,14 @@ export class DraftListingsController {
     @CurrentUser() user: AuthUser,
   ) {
     return this.service.autoComplete(listingId, user.id);
+  }
+
+  @Delete(':id')
+  async remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<{ success: true }> {
+    await this.service.remove(user.id, id);
+    return { success: true };
   }
 }

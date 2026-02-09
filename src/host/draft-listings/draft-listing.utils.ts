@@ -1,4 +1,4 @@
-import { privacyTypes, propertyTypes } from 'src/listings/dto/listing.types';
+import { privacyTypes, propertyTypes } from '@src/listings/dto/listing.types';
 
 export const completedDraftListingTemplate = {
   title: 'My Awesome Listing',
