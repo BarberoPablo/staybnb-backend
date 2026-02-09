@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DraftListing, Prisma } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '@src/prisma/prisma.service';
 import { completedDraftListingTemplate } from './draft-listing.utils';
 import {
   parseLocationFromDBToResponse,
@@ -255,5 +255,19 @@ export class DraftListingsService {
     });
 
     return { success: true };
+  }
+
+  async remove(hostId: string, draftId: string): Promise<void> {
+    const draft = await this.prisma.draftListing.findFirst({
+      where: { id: draftId, hostId },
+    });
+
+    if (!draft) {
+      throw new NotFoundException('Draft listing not found');
+    }
+
+    await this.prisma.draftListing.delete({
+      where: { id: draftId },
+    });
   }
 }
