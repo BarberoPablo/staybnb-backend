@@ -1,12 +1,10 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post } from '@nestjs/common';
 import type { AuthUser } from 'src/auth/auth-user';
-import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { ListingResponseDto } from '../../listings/dto/listing-response.dto';
 import { mapListingToResponse } from '../../listings/dto/listings.mapper';
 import { HostListingsService } from './host-listings.service';
 
-@UseGuards(AuthGuard)
 @Controller('host/listings')
 export class HostListingsController {
   constructor(private readonly service: HostListingsService) {}

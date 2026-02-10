@@ -1,19 +1,44 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { AuthUser } from './auth-user';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
 
-// This is a filter that gets executed before entering the controller
 @Injectable()
 export class AuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+  private readonly logger = new Logger(AuthGuard.name);
+
+  constructor(private readonly authService: AuthService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
 
-    // Temporary hardcoded user until real authentication
-    const user: AuthUser = {
-      id: '0013b1f',
-      role: 'ADMIN',
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing authorization token');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    const { supabaseId } = await this.authService.validateToken(token);
+
+    const profile = await this.authService.findProfileBySupabaseId(supabaseId);
+
+    if (!profile) {
+      this.logger.warn(`Profile not found for Supabase ID: ${supabaseId}`);
+      throw new ForbiddenException(
+        'Profile not provisioned. Complete onboarding first.',
+      );
+    }
+
+    request.user = {
+      id: profile.id,
+      role: profile.role,
     };
-
-    request.user = user;
 
     return true;
   }
