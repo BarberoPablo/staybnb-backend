@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Profile, UserRole } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
-import { JwksClient } from 'jwks-rsa';
+import JwksRsa, { JwksClient } from 'jwks-rsa';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -19,20 +19,30 @@ export class AuthService {
       throw new Error('SUPABASE_JWKS_URL is not defined');
     }
 
-    this.jwksClient = new JwksClient({ jwksUri });
+    this.jwksClient = JwksRsa({
+      jwksUri: process.env.SUPABASE_JWKS_URL!,
+      cache: true,
+      cacheMaxEntries: 5,
+      cacheMaxAge: 10 * 60 * 1000,
+      rateLimit: true,
+      jwksRequestsPerMinute: 10,
+    });
   }
 
   async validateToken(token: string): Promise<{ supabaseId: string }> {
     try {
+      const decodedFull = jwt.decode(token, { complete: true });
       const decoded = await this.verifyJwt(token);
-
-      if (!decoded.sub) {
+      if (!decoded.sub || !decoded.exp) {
         throw new UnauthorizedException('Invalid token payload');
       }
 
       return { supabaseId: decoded.sub };
     } catch (error) {
-      this.logger.error('JWT validation failed', error);
+      this.logger.error(
+        'JWT validation failed',
+        error instanceof Error ? error.message : error,
+      );
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
@@ -62,7 +72,11 @@ export class AuthService {
       jwt.verify(
         token,
         this.getKey.bind(this),
-        { algorithms: ['RS256'] },
+        {
+          algorithms: ['ES256', 'RS256'],
+          issuer: `${process.env.SUPABASE_PROJECT_URL}/auth/v1`,
+          audience: 'authenticated',
+        },
         (err, decoded) => {
           if (err) return reject(err);
           resolve(decoded as jwt.JwtPayload);
@@ -81,7 +95,16 @@ export class AuthService {
         return callback(err || new Error('Signing key not found'));
       }
 
-      callback(null, key.getPublicKey());
+      const publicKey =
+        key.getPublicKey?.() ||
+        (key as any).publicKey ||
+        (key as any).rsaPublicKey;
+
+      if (!publicKey) {
+        return callback(new Error('Public key not resolvable'));
+      }
+
+      callback(null, publicKey);
     });
   }
 }
