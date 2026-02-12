@@ -1,14 +1,23 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateProfileDto {
-  // These fields would typically come from the user input on the frontend
-  // during the onboarding process, after they've authenticated with Supabase.
-  // For initial creation, they can be optional.
-  @IsOptional()
   @IsString()
-  firstName?: string;
+  @IsNotEmpty()
+  @MaxLength(50)
+  firstName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  lastName: string;
 
   @IsOptional()
   @IsString()
-  lastName?: string;
+  @MaxLength(255)
+  avatarUrl: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  bio: string;
 }

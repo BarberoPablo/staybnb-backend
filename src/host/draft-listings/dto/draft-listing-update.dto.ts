@@ -7,6 +7,7 @@ import {
   Promotion,
 } from 'src/listings/dto/listing.types';
 
+//Domain dto
 export class UpdateDraftListingDto {
   amenities?: string[];
   images?: string[];
@@ -26,6 +27,7 @@ export class UpdateDraftListingDto {
   guestLimits?: GuestLimits;
 }
 
+//DTO for handler (Boundary DTO, Input DTO)
 export class PatchDraftListingBodyDto {
   @IsInt()
   @Min(0)

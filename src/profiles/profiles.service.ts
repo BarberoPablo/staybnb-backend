@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { Profile } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { Profile, UserRole } from '@prisma/client';
 
 @Injectable()
 export class ProfilesService {
@@ -15,15 +15,6 @@ export class ProfilesService {
   async findBySupabaseId(supabaseId: string): Promise<Profile | null> {
     return this.prisma.profile.findUnique({
       where: { supabaseId },
-    });
-  }
-
-  async createProfile(data: {
-    supabaseId: string;
-    role: UserRole;
-  }): Promise<Profile> {
-    return this.prisma.profile.create({
-      data,
     });
   }
 }
