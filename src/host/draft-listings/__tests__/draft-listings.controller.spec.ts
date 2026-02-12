@@ -42,10 +42,12 @@ describe('DraftListingsController', () => {
     it('should call the service remove method with correct parameters and return success', async () => {
       const userId = 'user123';
       const draftId = 'draft456';
+      const supabaseId = '';
+
       mockDraftListingsService.remove.mockResolvedValue(undefined);
 
       const result = await controller.remove(
-        { id: userId, role: UserRole.USER },
+        { id: userId, role: UserRole.USER, supabaseId },
         draftId,
       );
       expect(mockDraftListingsService.remove).toHaveBeenCalledWith(
@@ -58,11 +60,16 @@ describe('DraftListingsController', () => {
     it('should propagate errors from the service', async () => {
       const userId = 'user123';
       const draftId = 'draft456';
+      const supabaseId = '';
+
       const error = new Error('Service error');
       mockDraftListingsService.remove.mockRejectedValue(error);
 
       await expect(
-        controller.remove({ id: userId, role: UserRole.USER }, draftId),
+        controller.remove(
+          { id: userId, role: UserRole.USER, supabaseId },
+          draftId,
+        ),
       ).rejects.toThrow(error);
       expect(mockDraftListingsService.remove).toHaveBeenCalledWith(
         userId,
