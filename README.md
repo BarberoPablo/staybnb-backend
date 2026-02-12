@@ -1,51 +1,113 @@
-# Staybnb Backend
+# CurrentUser Decorator Lifecycle and Request Flow
 
-Backend service for the Staybnb project, built with **NestJS**, **Prisma**, **PostgreSQL**, and **Docker**, running entirely inside **WSL2 (Linux)**.
+## Overview
 
-## Current Status
+The `@CurrentUser()` decorator does **not** perform authentication and does **not** parse or validate tokens.  
+Its only responsibility is to **expose the already-resolved user context** from the HTTP request to controller methods.
 
-The backend infrastructure is fully set up and working:
+This decorator works exclusively because authentication is handled **before** controllers run.
 
-- ✅ NestJS project initialized and running
-- ✅ PostgreSQL running via Docker
-- ✅ Prisma installed and connected to the database
-- ✅ Prisma migrations working
-- ✅ Project running inside WSL2 (Linux environment)
-- ✅ Development environment configured using Cursor + WSL
-- ✅ Node.js dependencies installed in Linux (not Windows)
-- ✅ Docker, Prisma, and Node running in the same OS (Linux)
+---
 
-This setup ensures consistent binaries, avoids cross-OS issues, and matches a production-like environment.
+## Request Lifecycle
 
-## Tech Stack
+### 1. Incoming Request
 
-- **Node.js**
-- **NestJS**
-- **Prisma ORM**
-- **PostgreSQL**
-- **Docker & Docker Compose**
-- **WSL2 (Ubuntu)**
-- **Cursor IDE (Remote WSL mode)**
+Every HTTP request enters the application and is intercepted by the global `AuthGuard` before any controller logic executes.
 
-## Development Environment
+---
 
-The project lives inside the Linux filesystem:
+### 2. Identity Resolution (AuthGuard)
 
-All commands (`npm`, `prisma`, `docker`) are executed inside WSL2.
+The `AuthGuard` is responsible for resolving the user identity:
 
-Windows is used only as a host and file viewer — all runtime and tooling happens in Linux.
+- Reads the `Authorization` header
+- Validates the JWT
+- Extracts the `supabaseId`
+- Loads the associated profile from the database
+- Attaches a normalized user object to the request
 
-## Running the Project
+Example:
 
-```bash
-# Start database
-docker compose up -d
+```
+request.user = {
+  id,
+  supabaseId,
+  role,
+};
+```
 
-# Install dependencies (Linux)
-npm install
+At this point, authentication and authorization context are fully resolved.
 
-# Run migrations
-npx prisma migrate dev
+---
 
-# Start NestJS in watch mode
-npm run start:dev
+### 3. Controller Execution
+
+Only after the `AuthGuard` succeeds does Nest invoke the controller method.
+
+Controllers **must assume** that identity resolution has already occurred.
+
+---
+
+### 4. `@CurrentUser()` Execution
+
+When a controller parameter is decorated with `@CurrentUser()`:
+
+- The decorator receives the same `ExecutionContext`
+- Accesses the underlying HTTP request
+- Returns `request.user`
+
+The decorator:
+
+- does **not** read headers
+- does **not** parse tokens
+- does **not** perform validation
+
+---
+
+### 5. User Context Injection
+
+The resolved user is injected directly into the controller method:
+
+```
+@Get('me')
+getMe(@CurrentUser() user) {}
+```
+
+The controller receives a trusted, pre-validated user context.
+
+---
+
+## Responsibility Boundaries
+
+- **AuthGuard**
+  - Resolves identity
+  - Validates tokens
+  - Loads profile data
+  - Populates `request.user`
+
+- **@CurrentUser()**
+  - Reads `request.user`
+  - Exposes identity to controllers
+
+- **Controllers**
+  - Consume user context
+  - Never read headers
+  - Never parse or validate tokens
+
+---
+
+## Architectural Guarantees
+
+- Authentication logic is centralized
+- Controllers remain transport-agnostic
+- Identity is resolved once per request
+- Security rules are consistent and enforceable
+
+If `AuthGuard` is removed or bypassed, `@CurrentUser()` becomes meaningless.
+
+---
+
+## Key Principle
+
+> The `AuthGuard` creates the user context once, `@CurrentUser()` simply reads it, and controllers must never do more than that.

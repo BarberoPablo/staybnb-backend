@@ -11,10 +11,10 @@ model Profile {
   supabaseId    String   @unique
   role          UserRole @default(USER)
 
-  firstName     String?
-  lastName      String?
-  avatarUrl     String?
-  bio           String?
+  firstName     String @db.VarChar(50)
+  lastName      String @db.VarChar(50)
+  avatarUrl     String? @db.VarChar(255)
+  bio           String? @db.VarChar(255)
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -8,10 +8,10 @@ export class UsersController {
   constructor(private readonly profilesService: ProfilesService) {}
 
   @Get('me')
-  async getMe(@CurrentUser() profile: Profile): Promise<Profile> {
+  async getMe(@CurrentUser() profile: Profile): Promise<Profile | null> {
     if (!profile) {
       throw new NotFoundException('Profile not found');
     }
-    return profile;
+    return this.profilesService.getMe(profile.id);
   }
 }

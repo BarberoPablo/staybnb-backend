@@ -4,6 +4,7 @@ import { Profile, UserRole } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 import JwksRsa, { JwksClient } from 'jwks-rsa';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateProfileDto } from './dto/create-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +32,6 @@ export class AuthService {
 
   async validateToken(token: string): Promise<{ supabaseId: string }> {
     try {
-      const decodedFull = jwt.decode(token, { complete: true });
       const decoded = await this.verifyJwt(token);
       if (!decoded.sub || !decoded.exp) {
         throw new UnauthorizedException('Invalid token payload');
@@ -55,14 +55,13 @@ export class AuthService {
 
   async createProfile(
     supabaseId: string,
-    data: { firstName?: string; lastName?: string },
+    data: CreateProfileDto,
   ): Promise<Profile> {
     return this.prisma.profile.create({
       data: {
+        ...data,
         supabaseId,
         role: UserRole.USER,
-        firstName: data.firstName,
-        lastName: data.lastName,
       },
     });
   }
