@@ -10,6 +10,7 @@ import {
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
+import { Public } from './public.decorator';
 
 /**
  * AuthController handles authentication lifecycle and identity transitions.
@@ -29,20 +30,16 @@ export class AuthController {
 
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('onboard')
   async onboardProfile(
-    @Req() req: Request,
+    @Req() req: Request & { auth: { supabaseId: string } },
     @Body() createProfileDto: CreateProfileDto,
   ) {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Authorization token required');
+    if (!req.auth.supabaseId) {
+      throw new UnauthorizedException('Authentication context missing');
     }
-
-    const token = authHeader.split(' ')[1];
-
-    const { supabaseId } = await this.authService.validateToken(token);
+    const supabaseId = req.auth.supabaseId;
 
     const existingProfile =
       await this.authService.findProfileBySupabaseId(supabaseId);
