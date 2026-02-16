@@ -4,6 +4,6 @@ import { DraftListingsService } from './draft-listings.service';
 
 @Module({
   controllers: [DraftListingsController],
-  providers: [DraftListingsService]
+  providers: [DraftListingsService],
 })
 export class DraftListingsModule {}

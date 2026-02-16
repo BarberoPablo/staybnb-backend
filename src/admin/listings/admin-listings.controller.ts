@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import type { AuthUser } from 'src/auth/auth-user';
-import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { ListingResponseDto } from 'src/listings/dto/listing-response.dto';
 import { mapListingToResponse } from 'src/listings/dto/listings.mapper';
@@ -12,7 +11,7 @@ import { ListingModerationDto } from './dto/listing-moderation.dto';
 import { mapModerationToDto } from './dto/listing-moderation.mapper';
 import { RejectListingDto } from './dto/reject-listings.dto';
 
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Roles(UserRole.ADMIN)
 @Controller('admin/listings')
 export class AdminListingsController {

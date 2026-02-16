@@ -6,31 +6,26 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  supabaseId String   @unique
-  role       UserRole @default(USER)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  profile       Profile?
-  moderations   ListingModeration[]
-}
-
 model Profile {
-  id        String  @id
-  firstName String
-  lastName  String
-  avatarUrl String?
-  bio       String?
+  id            String   @id @default(uuid())
+  supabaseId    String   @unique
+  role          UserRole @default(USER)
 
-  user          User           @relation(fields: [id], references: [id], onDelete: Cascade)
+  firstName     String @db.VarChar(50)
+  lastName      String @db.VarChar(50)
+  avatarUrl     String? @db.VarChar(255)
+  bio           String? @db.VarChar(255)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   favorites     Favorite[]
   draftListings DraftListing[]
   reservations  Reservation[]
   listings      Listing[]
+  moderations   ListingModeration[]
 }
+
 
 model Listing {
   id            String        @id @default(uuid())
@@ -177,11 +172,12 @@ model ListingModeration {
   createdAt DateTime                @default(now())
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  admin   User    @relation(fields: [adminId], references: [id])
+  admin   Profile @relation(fields: [adminId], references: [id], onDelete: Restrict)
 
   @@index([listingId])
   @@index([adminId])
 }
+
 
 model Favorite {
   userId    String
