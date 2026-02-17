@@ -7,17 +7,17 @@ datasource db {
 }
 
 model Profile {
-  id            String   @id @default(uuid())
-  supabaseId    String   @unique
-  role          UserRole @default(USER)
+  id         String   @id @default(uuid())
+  supabaseId String   @unique
+  role       UserRole @default(USER)
 
-  firstName     String @db.VarChar(50)
-  lastName      String @db.VarChar(50)
-  avatarUrl     String? @db.VarChar(255)
-  bio           String? @db.VarChar(255)
+  firstName String  @db.VarChar(50)
+  lastName  String  @db.VarChar(50)
+  avatarUrl String? @db.VarChar(255)
+  bio       String? @db.VarChar(255)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   favorites     Favorite[]
   draftListings DraftListing[]
@@ -26,19 +26,18 @@ model Profile {
   moderations   ListingModeration[]
 }
 
-
 model Listing {
-  id            String        @id @default(uuid())
-  title         String
-  description   String
-  nightPrice Int       
-  status        ListingStatus @default(PENDING)
-  hostId        String
-  host          Profile          @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  images        String[]
-  promotions   Json     @default("[]")
-  score   Json     @default("[]")
-  
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  nightPrice  Int
+  status      ListingStatus @default(PENDING)
+  hostId      String
+  host        Profile       @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  images      String[]
+  promotions  Json          @default("[]")
+  score       Json          @default("[]")
+
   // Structure
   beds      Int
   bedrooms  Int
@@ -85,9 +84,9 @@ model DraftListing {
   id String @id @default(uuid())
 
   // Core
-  title         String @default("")
-  description   String @default("")
-  nightPrice  Int @default(40)
+  title       String @default("")
+  description String @default("")
+  nightPrice  Int    @default(40)
 
   images       String[] @default([])
   amenities    String[] @default([])
@@ -113,10 +112,10 @@ model DraftListing {
   // Rules
   checkInTime   String @default("15:00")
   checkOutTime  String @default("11:00")
-  minCancelDays Int @default(3)
+  minCancelDays Int    @default(3)
 
   // Meta
-  privacyType  PrivacyType @default(ENTIRE)
+  privacyType  PrivacyType  @default(ENTIRE)
   propertyType PropertyType @default(HOUSE)
 
   hostId  String
@@ -133,32 +132,42 @@ model Reservation {
   userId    String?
   listingId String
 
-  startDate  DateTime
-  endDate    DateTime
-  totalPrice Int
+  startDate DateTime
+  endDate   DateTime
 
-  user    Profile?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  guests Json @default("{}")
 
-  createdAt DateTime @default(now())
+  totalPrice         Decimal  @db.Decimal(10, 2)
+  totalNights        Int
+  nightPrice         Decimal  @db.Decimal(10, 2)
+  discount           Decimal? @db.Decimal(10, 2)
+  discountPercentage Int?
+
+  status ReservationStatus @default(UPCOMING)
+
+  user    Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listing Listing  @relation(fields: [listingId], references: [id], onDelete: Restrict)
+
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  canceledAt DateTime? @db.Timestamptz(6)
 
   @@index([listingId])
   @@index([userId])
 }
 
 model Amenity {
-  id   String @id @default(uuid())
-  name String @unique
-  category          AmenityCategory
-  
+  id       String          @id @default(uuid())
+  name     String          @unique
+  category AmenityCategory
+
   listings ListingAmenity[]
 }
 
 model ListingAmenity {
   listingId String
   amenityId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  amenity  Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  amenity   Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
 
   @@id([listingId, amenityId])
 }
@@ -177,7 +186,6 @@ model ListingModeration {
   @@index([listingId])
   @@index([adminId])
 }
-
 
 model Favorite {
   userId    String
@@ -208,7 +216,6 @@ enum ListingModerationAction {
   REJECTED
 }
 
-
 enum PrivacyType {
   ENTIRE
   PRIVATE
@@ -231,4 +238,11 @@ enum AmenityCategory {
   ENTERTAINMENT
   SECURITY
   ACTIVITIES
+}
+
+enum ReservationStatus {
+  UPCOMING
+  COMPLETED
+  CANCELED
+  CANCELED_BY_HOST
 }
