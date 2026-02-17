@@ -4,7 +4,11 @@ export const completedDraftListingTemplate = {
   title: 'My Awesome Listing',
   description: 'A wonderful place to stay.',
   nightPrice: 100,
-  images: ['https://example.com/default-image.jpg'],
+  images: [
+    'https://cf.bstatic.com/xdata/images/hotel/max1024x768/518574398.jpg?k=b1c360ad141d067e25868253d31da1f244dde2bdb9c6412149ffc32a346ca040&o=',
+    'https://ferienwohnung-bodensdorf.at/wp-content/uploads/2022/10/New-Stift-Ossiach-Appartment-nahled.jpg',
+    'https://ferienwohnung-bodensdorf.at/wp-content/uploads/2022/10/04-1-scaled.jpg',
+  ],
   amenities: [
     'cf2f1f8d-68e9-436a-9caa-a1fb46726668',
     '03882c1e-3784-401c-8fd7-dfc9b31232d4',

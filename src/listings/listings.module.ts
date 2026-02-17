@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { PublicListingsController } from './public-listings.controller';
-import { PublicListingsService } from './public-listings.service';
+import { PublicListingsController } from './listings.controller';
+import { PublicListingsService } from './listings.service';
 
 @Module({
   controllers: [PublicListingsController],
