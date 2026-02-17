@@ -11,6 +11,7 @@ import { HostListingsModule } from './host/listings/host-listings.module';
 import { ListingsModule } from './listings/listings.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './profiles/profiles.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UsersModule } from './profiles/profiles.module';
     HostListingsModule,
     AdminListingsModule,
     ListingsModule,
+    ReservationsModule,
   ],
   providers: [
     {

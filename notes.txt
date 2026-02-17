@@ -10,3 +10,6 @@ Visual UI:
   1- hostname -I
   2- npx prisma studio --port 5555 --browser none
   3- Access chrome with: http://{{hostname}}:5555/ -> http://172.31.247.163:5555/
+
+Testing
+npm run test fileRoute

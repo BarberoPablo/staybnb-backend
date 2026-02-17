@@ -57,3 +57,6 @@ export type ListingWithAmenities = Prisma.ListingGetPayload<{
     amenities: true;
   };
 }>;
+
+export const guests = ['adults', 'children', 'infant', 'pets'] as const;
+export type Guests = (typeof guests)[number];
