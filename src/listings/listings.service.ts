@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Listing, ListingStatus } from '@prisma/client';
+import { ListingStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class PublicListingsService {
+export class ListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {

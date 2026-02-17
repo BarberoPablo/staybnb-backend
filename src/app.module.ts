@@ -8,7 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { DraftListingsModule } from './host/draft-listings/draft-listings.module';
 import { HostListingsModule } from './host/listings/host-listings.module';
-import { PublicListingsModule } from './listings/listings.module';
+import { ListingsModule } from './listings/listings.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './profiles/profiles.module';
 
@@ -30,7 +30,7 @@ import { UsersModule } from './profiles/profiles.module';
     DraftListingsModule,
     HostListingsModule,
     AdminListingsModule,
-    PublicListingsModule,
+    ListingsModule,
   ],
   providers: [
     {
