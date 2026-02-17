@@ -3,14 +3,14 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import * as Joi from 'joi';
 import { AdminListingsModule } from './admin/listings/admin-listings.module';
+import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { DraftListingsModule } from './host/draft-listings/draft-listings.module';
 import { HostListingsModule } from './host/listings/host-listings.module';
+import { PublicListingsModule } from './listings/listings.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { PublicListingsModule } from './public/listings/public-listings.module';
 import { UsersModule } from './profiles/profiles.module';
-import { AuthGuard } from './auth/auth.guard';
 
 @Module({
   imports: [
