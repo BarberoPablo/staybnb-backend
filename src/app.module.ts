@@ -5,6 +5,7 @@ import * as Joi from 'joi';
 import { AdminListingsModule } from './admin/listings/admin-listings.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
+import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { DraftListingsModule } from './host/draft-listings/draft-listings.module';
 import { HostListingsModule } from './host/listings/host-listings.module';
@@ -22,6 +23,8 @@ import { ReservationsModule } from './reservations/reservations.module';
         SUPABASE_PROJECT_URL: Joi.string().required(),
         SUPABASE_JWKS_URL: Joi.string().required(),
         SUPABASE_SERVICE_ROLE_KEY: Joi.string().required(),
+        RESEND_API_KEY: Joi.string().required(),
+        FRONTEND_URL: Joi.string().required(),
       }),
     }),
     AuthModule,
@@ -33,6 +36,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     AdminListingsModule,
     ListingsModule,
     ReservationsModule,
+    EmailModule,
   ],
   providers: [
     {
