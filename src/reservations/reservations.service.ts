@@ -2,10 +2,13 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { ListingStatus, Prisma } from '@prisma/client';
 import { AuthUser } from '@src/auth/auth-user';
+import { EmailService } from '@src/email/email.service';
+import { ReservationEmailData } from '@src/email/types';
 import {
   calculateNights,
   getListingPromotionDB,
@@ -17,7 +20,12 @@ import { CreateReservationDto } from './dto/reservations-create.dto';
 
 @Injectable()
 export class ReservationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ReservationsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async create(listingId: string, data: CreateReservationDto, user: AuthUser) {
     const { startDate, endDate, guests } = data;
@@ -36,6 +44,9 @@ export class ReservationsService {
       where: {
         id: listingId,
       },
+      include: {
+        host: true,
+      },
     });
 
     if (!listing) {
@@ -44,6 +55,15 @@ export class ReservationsService {
 
     if (listing.status !== ListingStatus.PUBLISHED) {
       throw new BadRequestException('Listing is not available for booking');
+    }
+
+    const guestProfile = await this.prisma.profile.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!guestProfile) {
+      // This should theoretically not happen if the user passed the AuthGuard
+      throw new ForbiddenException('Guest profile not found.');
     }
 
     if (listing.hostId === user.id) {
@@ -134,6 +154,53 @@ export class ReservationsService {
       },
     });
 
+    // Send email asynchronously without blocking the response
+    this._sendConfirmationEmail(reservation, guestProfile, listing).catch(
+      (err) => {
+        this.logger.error(
+          `Failed to send confirmation email for reservation ${reservation.id}`,
+          err,
+        );
+      },
+    );
+
     return reservation;
+  }
+
+  private async _sendConfirmationEmail(
+    reservation: Prisma.ReservationGetPayload<{}>,
+    guestProfile: Prisma.ProfileGetPayload<{}>,
+    listing: Prisma.ListingGetPayload<{ include: { host: true } }>,
+  ) {
+    try {
+      const emailData: ReservationEmailData = {
+        userEmail: guestProfile.supabaseId, // Assuming supabaseId is the email
+        userName: `${guestProfile.firstName} ${guestProfile.lastName}`,
+        reservationId: reservation.id,
+        startDate: reservation.startDate,
+        endDate: reservation.endDate,
+        guests: reservation.guests as Record<string, number>,
+        totalNights: reservation.totalNights,
+        totalPrice: reservation.totalPrice.toNumber(),
+        nightPrice: reservation.nightPrice.toNumber(),
+        discount: reservation.discount?.toNumber(),
+        discountPercentage: reservation?.discountPercentage,
+        listingId: listing.id,
+        listingTitle: listing.title,
+        listingImages: listing.images,
+        listingAddress: (listing.location as any)?.formatted,
+        checkInTime: listing.checkInTime,
+        checkOutTime: listing.checkOutTime,
+        hostName: `${listing.host.firstName} ${listing.host.lastName}`,
+        hostAvatarUrl: listing.host.avatarUrl,
+      };
+
+      await this.emailService.sendReservationConfirmationEmail(emailData);
+    } catch (err) {
+      this.logger.error(
+        `Error preparing or sending email for reservation ${reservation.id}`,
+        err,
+      );
+    }
   }
 }
