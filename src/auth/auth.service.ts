@@ -30,14 +30,17 @@ export class AuthService {
     });
   }
 
-  async validateToken(token: string): Promise<{ supabaseId: string }> {
+  async validateToken(
+    token: string,
+  ): Promise<{ supabaseId: string; email: string }> {
     try {
       const decoded = await this.verifyJwt(token);
+
       if (!decoded.sub || !decoded.exp) {
         throw new UnauthorizedException('Invalid token payload');
       }
 
-      return { supabaseId: decoded.sub };
+      return { supabaseId: decoded.sub, email: decoded.email };
     } catch (error) {
       this.logger.error(
         'JWT validation failed',
@@ -54,8 +57,8 @@ export class AuthService {
   }
 
   async createProfile(
-    supabaseId: string,
     data: CreateProfileDto,
+    supabaseId: string,
   ): Promise<Profile> {
     return this.prisma.profile.create({
       data: {

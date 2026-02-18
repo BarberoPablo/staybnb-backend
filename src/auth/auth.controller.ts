@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
+import { AuthContext } from './dto/auth.types';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { Public } from './public.decorator';
 
@@ -33,7 +34,7 @@ export class AuthController {
   @Public()
   @Post('onboard')
   async onboardProfile(
-    @Req() req: Request & { auth: { supabaseId: string } },
+    @Req() req: Request & { auth: AuthContext },
     @Body() createProfileDto: CreateProfileDto,
   ) {
     if (!req.auth.supabaseId) {
@@ -48,6 +49,6 @@ export class AuthController {
       throw new ConflictException('Profile already exists');
     }
 
-    return this.authService.createProfile(supabaseId, createProfileDto);
+    return this.authService.createProfile(createProfileDto, supabaseId);
   }
 }
