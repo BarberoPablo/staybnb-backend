@@ -4,4 +4,5 @@ export interface AuthUser {
   id: string;
   supabaseId: string;
   role: UserRole;
+  email: string;
 }

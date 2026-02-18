@@ -155,14 +155,17 @@ export class ReservationsService {
     });
 
     // Send email asynchronously without blocking the response
-    this._sendConfirmationEmail(reservation, guestProfile, listing).catch(
-      (err) => {
-        this.logger.error(
-          `Failed to send confirmation email for reservation ${reservation.id}`,
-          err,
-        );
-      },
-    );
+    this._sendConfirmationEmail(
+      reservation,
+      guestProfile,
+      listing,
+      user.email,
+    ).catch((err) => {
+      this.logger.error(
+        `Failed to send confirmation email for reservation ${reservation.id}`,
+        err,
+      );
+    });
 
     return reservation;
   }
@@ -171,10 +174,11 @@ export class ReservationsService {
     reservation: Prisma.ReservationGetPayload<{}>,
     guestProfile: Prisma.ProfileGetPayload<{}>,
     listing: Prisma.ListingGetPayload<{ include: { host: true } }>,
+    email: string,
   ) {
     try {
       const emailData: ReservationEmailData = {
-        userEmail: guestProfile.supabaseId, // Assuming supabaseId is the email
+        userEmail: email,
         userName: `${guestProfile.firstName} ${guestProfile.lastName}`,
         reservationId: reservation.id,
         startDate: reservation.startDate,

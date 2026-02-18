@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthService } from './auth.service';
+import { AuthRequest } from './dto/auth.types';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
@@ -27,7 +28,7 @@ export class AuthGuard implements CanActivate {
       this.reflector.get<boolean>(IS_PUBLIC_KEY, handler) ?? //checks if handler is public
       this.reflector.get<boolean>(IS_PUBLIC_KEY, controller); //checks if the whole controller is public
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthRequest>();
 
     const token = this.extractToken(request);
 
@@ -38,7 +39,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Authentication token not found');
     }
 
-    const { supabaseId } = await this.authService.validateToken(token);
+    const { supabaseId, email } = await this.authService.validateToken(token);
 
     request.auth = { supabaseId };
 
@@ -57,12 +58,13 @@ export class AuthGuard implements CanActivate {
     request.user = {
       id: profile.id,
       role: profile.role,
+      email,
     };
 
     return true;
   }
 
-  private extractToken(request: any): string | null {
+  private extractToken(request: AuthRequest): string | null {
     const cookieHeader: string | undefined = request.headers.cookie;
 
     if (cookieHeader) {
@@ -79,12 +81,12 @@ export class AuthGuard implements CanActivate {
 
           const decoded = JSON.parse(
             Buffer.from(base64Payload, 'base64').toString('utf8'),
-          );
+          ) as { access_token: string };
 
           if (decoded?.access_token) {
             return decoded.access_token;
           }
-        } catch (err) {
+        } catch (_) {
           this.logger.warn('Failed to parse Supabase auth cookie (guard)');
         }
       }

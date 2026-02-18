@@ -12,6 +12,7 @@ const mockUser: AuthUser = {
   id: 'user-id',
   supabaseId: 'supabase-user-id',
   role: 'USER',
+  email: 'test@test.com',
 };
 
 describe('ReservationsController', () => {
