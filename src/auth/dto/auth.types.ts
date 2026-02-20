@@ -15,3 +15,9 @@ export interface AuthRequest extends Request {
   auth?: AuthContext;
   user?: DomainUser;
 }
+
+export interface SupabaseJwtPayload {
+  sub?: string;
+  exp?: number;
+  email?: string;
+}

@@ -1,3 +1,5 @@
+import { Guests } from '@src/listings/dto/listing.types';
+
 export interface ReservationEmailData {
   // User information
   userEmail: string;
@@ -7,7 +9,7 @@ export interface ReservationEmailData {
   reservationId: string;
   startDate: Date;
   endDate: Date;
-  guests: Record<string, number>;
+  guests: ReservationGuests;
   totalNights: number;
   totalPrice: number;
   nightPrice: number;
@@ -35,3 +37,5 @@ export interface EmailResult {
   messageId?: string;
   error?: string;
 }
+
+export type ReservationGuests = Partial<Record<Guests, number>>;

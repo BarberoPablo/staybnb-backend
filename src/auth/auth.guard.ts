@@ -86,8 +86,11 @@ export class AuthGuard implements CanActivate {
           if (decoded?.access_token) {
             return decoded.access_token;
           }
-        } catch (_) {
-          this.logger.warn('Failed to parse Supabase auth cookie (guard)');
+        } catch (error) {
+          this.logger.warn(
+            'Failed to parse Supabase auth cookie (guard)',
+            error instanceof Error ? error.message : error,
+          );
         }
       }
     }
