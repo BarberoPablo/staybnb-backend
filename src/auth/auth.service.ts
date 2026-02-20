@@ -4,6 +4,7 @@ import { Profile, UserRole } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 import JwksRsa, { JwksClient } from 'jwks-rsa';
 import { PrismaService } from '../prisma/prisma.service';
+import { SupabaseJwtPayload } from './dto/auth.types';
 import { CreateProfileDto } from './dto/create-profile.dto';
 
 @Injectable()
@@ -32,9 +33,9 @@ export class AuthService {
 
   async validateToken(
     token: string,
-  ): Promise<{ supabaseId: string; email: string }> {
+  ): Promise<{ supabaseId: string; email?: string }> {
     try {
-      const decoded = await this.verifyJwt(token);
+      const decoded: SupabaseJwtPayload = await this.verifyJwt(token);
 
       if (!decoded.sub || !decoded.exp) {
         throw new UnauthorizedException('Invalid token payload');
@@ -97,10 +98,8 @@ export class AuthService {
         return callback(err || new Error('Signing key not found'));
       }
 
-      const publicKey =
-        key.getPublicKey?.() ||
-        (key as any).publicKey ||
-        (key as any).rsaPublicKey;
+      const signingKey = key;
+      const publicKey = signingKey.getPublicKey();
 
       if (!publicKey) {
         return callback(new Error('Public key not resolvable'));

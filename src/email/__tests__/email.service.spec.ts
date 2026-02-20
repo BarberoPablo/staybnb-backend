@@ -1,11 +1,10 @@
 import { Logger } from '@nestjs/common'; // Keep the import for Logger
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
+import { RESEND_CLIENT } from '@src/email/email.constants';
 import { EmailService } from '@src/email/email.service';
 import { ReservationConfirmationEmail } from '@src/email/templates/reservation-confirmation.template';
 import { ReservationEmailData } from '@src/email/types';
-import { Resend } from 'resend';
-import { RESEND_CLIENT } from '@src/email/email.constants';
 
 // Mock the Resend client
 const mockResendClient = {
@@ -26,7 +25,6 @@ const mockConfigService = {
 
 describe('EmailService', () => {
   let service: EmailService;
-  let resendClient: Resend; // This will actually be the mockResendClient
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
@@ -54,7 +52,6 @@ describe('EmailService', () => {
     }).compile();
 
     service = module.get<EmailService>(EmailService);
-    resendClient = module.get<Resend>(RESEND_CLIENT); // Assign the mock to resendClient
     jest.clearAllMocks(); // Clear mocks after getting instances
   });
 
@@ -68,7 +65,7 @@ describe('EmailService', () => {
   });
 
   const mockEmailData: ReservationEmailData = {
-    userEmail: 'test@example.com',
+    userEmail: 'pablobarbero220@gmail.com',
     userName: 'John Doe',
     reservationId: 'res_123',
     startDate: new Date('2026-03-01'),

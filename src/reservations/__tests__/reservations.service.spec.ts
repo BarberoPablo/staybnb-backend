@@ -1,13 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ReservationsService } from '@src/reservations/reservations.service';
-import { PrismaService } from '@src/prisma/prisma.service';
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { ListingStatus, PropertyType, PrivacyType } from '@prisma/client';
+import { Test, TestingModule } from '@nestjs/testing';
+import {
+  ListingStatus,
+  Prisma,
+  PrivacyType,
+  PropertyType,
+} from '@prisma/client';
 import { AuthUser } from '@src/auth/auth-user';
+import { PrismaService } from '@src/prisma/prisma.service';
+import { ReservationsService } from '@src/reservations/reservations.service';
 
 const mockPrismaService = {
   listing: {
@@ -30,7 +35,7 @@ const mockListing = {
   id: 'listing-id',
   status: ListingStatus.PUBLISHED,
   hostId: 'host-id',
-  nightPrice: 100,
+  nightPrice: new Prisma.Decimal(100),
   maxAdults: 2,
   maxChildren: 2,
   maxInfants: 1,
@@ -112,9 +117,9 @@ describe('ReservationsService', () => {
         id: 'reservation-id',
         listingId: mockListing.id,
         userId: mockUser.id,
-        totalPrice: 100,
+        totalPrice: new Prisma.Decimal(100),
         totalNights: 1,
-        nightPrice: 100,
+        nightPrice: new Prisma.Decimal(100),
         discount: null,
         discountPercentage: null,
       });
@@ -132,7 +137,7 @@ describe('ReservationsService', () => {
       expect(mockPrismaService.reservation.create).toHaveBeenCalled();
       expect(result.listingId).toBe(mockListing.id);
       expect(result.userId).toBe(mockUser.id);
-      expect(result.totalPrice).toBe(100);
+      expect(result.totalPrice).toBeCloseTo(100, 2);
       expect(result.discount).toBeNull();
       expect(result.discountPercentage).toBeNull();
     });
@@ -150,11 +155,12 @@ describe('ReservationsService', () => {
       };
 
       const expectedNights = 3; // From promotionStartDate to promotionEndDate
-      const expectedBasePrice = mockListing.nightPrice * expectedNights; // 100 * 3 = 300
+      const expectedBasePrice = mockListing.nightPrice.mul(expectedNights); // 100 * 3 = 300
       const expectedDiscountPercentage = 5; // For 2+ nights
-      const expectedDiscount =
-        (expectedBasePrice * expectedDiscountPercentage) / 100; // 300 * 0.05 = 15
-      const expectedTotalPrice = expectedBasePrice - expectedDiscount; // 300 - 15 = 285
+      const expectedDiscount = expectedBasePrice
+        .mul(expectedDiscountPercentage)
+        .div(100); // 300 * 0.05 = 15
+      const expectedTotalPrice = expectedBasePrice.sub(expectedDiscount); // 300 - 15 = 285
 
       mockPrismaService.listing.findUnique.mockResolvedValue(mockListing);
       mockPrismaService.reservation.findMany.mockResolvedValue([]);
@@ -177,9 +183,15 @@ describe('ReservationsService', () => {
       );
 
       expect(result).toBeDefined();
-      expect(result.totalPrice).toBe(expectedTotalPrice);
+      expect(result.totalPrice.toNumber()).toBeCloseTo(
+        expectedTotalPrice.toNumber(),
+        2,
+      );
       expect(result.totalNights).toBe(expectedNights);
-      expect(result.discount).toBe(expectedDiscount);
+      expect(result.discount?.toNumber()).toBeCloseTo(
+        expectedDiscount.toNumber(),
+        2,
+      );
       expect(result.discountPercentage).toBe(expectedDiscountPercentage);
       expect(mockPrismaService.reservation.create).toHaveBeenCalledWith(
         expect.objectContaining({

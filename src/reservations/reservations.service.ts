@@ -5,10 +5,11 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ListingStatus, Prisma } from '@prisma/client';
+import { ListingStatus, Prisma, Profile, Reservation } from '@prisma/client';
 import { AuthUser } from '@src/auth/auth-user';
 import { EmailService } from '@src/email/email.service';
-import { ReservationEmailData } from '@src/email/types';
+import { ReservationEmailData, ReservationGuests } from '@src/email/types';
+import { DraftListingLocation } from '@src/listings/dto/listing.types';
 import {
   calculateNights,
   getListingPromotionDB,
@@ -171,8 +172,8 @@ export class ReservationsService {
   }
 
   private async _sendConfirmationEmail(
-    reservation: Prisma.ReservationGetPayload<{}>,
-    guestProfile: Prisma.ProfileGetPayload<{}>,
+    reservation: Reservation,
+    guestProfile: Profile,
     listing: Prisma.ListingGetPayload<{ include: { host: true } }>,
     email: string,
   ) {
@@ -183,7 +184,7 @@ export class ReservationsService {
         reservationId: reservation.id,
         startDate: reservation.startDate,
         endDate: reservation.endDate,
-        guests: reservation.guests as Record<string, number>,
+        guests: reservation.guests as ReservationGuests,
         totalNights: reservation.totalNights,
         totalPrice: reservation.totalPrice.toNumber(),
         nightPrice: reservation.nightPrice.toNumber(),
@@ -192,7 +193,7 @@ export class ReservationsService {
         listingId: listing.id,
         listingTitle: listing.title,
         listingImages: listing.images,
-        listingAddress: (listing.location as any)?.formatted,
+        listingAddress: (listing.location as DraftListingLocation)?.formatted,
         checkInTime: listing.checkInTime,
         checkOutTime: listing.checkOutTime,
         hostName: `${listing.host.firstName} ${listing.host.lastName}`,

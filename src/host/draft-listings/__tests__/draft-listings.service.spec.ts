@@ -1,8 +1,8 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DraftListing } from '@prisma/client';
-import { DraftListingsService } from '../draft-listings.service';
 import { PrismaService } from '@src/prisma/prisma.service';
+import { DraftListingsService } from '../draft-listings.service';
 
 describe('DraftListingsService', () => {
   let service: DraftListingsService;
@@ -66,46 +66,58 @@ describe('DraftListingsService', () => {
     const draftId = 'draft123';
 
     it('should delete the record if it exists and the userId matches the owner', async () => {
-      jest
+      const findFirstSpy = jest
         .spyOn(prisma.draftListing, 'findFirst')
         .mockResolvedValue(mockDraftListing);
-      jest
+
+      const deleteSpy = jest
         .spyOn(prisma.draftListing, 'delete')
         .mockResolvedValue(mockDraftListing);
 
       await service.remove(hostId, draftId);
 
-      expect(prisma.draftListing.findFirst).toHaveBeenCalledWith({
+      expect(findFirstSpy).toHaveBeenCalledWith({
         where: { id: draftId, hostId },
       });
-      expect(prisma.draftListing.delete).toHaveBeenCalledWith({
+      expect(deleteSpy).toHaveBeenCalledWith({
         where: { id: draftId },
       });
     });
 
     it('should throw NotFoundException if the DraftListing ID does not exist', async () => {
-      jest.spyOn(prisma.draftListing, 'findFirst').mockResolvedValue(null);
+      const findFirstSpy = jest
+        .spyOn(prisma.draftListing, 'findFirst')
+        .mockResolvedValue(null);
+
+      const deleteSpy = jest.spyOn(prisma.draftListing, 'delete');
 
       await expect(service.remove(hostId, draftId)).rejects.toThrow(
         NotFoundException,
       );
-      expect(prisma.draftListing.findFirst).toHaveBeenCalledWith({
+
+      expect(findFirstSpy).toHaveBeenCalledWith({
         where: { id: draftId, hostId },
       });
-      expect(prisma.draftListing.delete).not.toHaveBeenCalled();
+      expect(deleteSpy).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if a different user tries to delete it', async () => {
-      jest.spyOn(prisma.draftListing, 'findFirst').mockResolvedValue(null); // findFirst with different hostId will return null
+      const findFirstSpy = jest
+        .spyOn(prisma.draftListing, 'findFirst')
+        .mockResolvedValue(null);
+
+      const deleteSpy = jest.spyOn(prisma.draftListing, 'delete');
 
       const differentHostId = 'host456';
+
       await expect(service.remove(differentHostId, draftId)).rejects.toThrow(
         NotFoundException,
       );
-      expect(prisma.draftListing.findFirst).toHaveBeenCalledWith({
+
+      expect(findFirstSpy).toHaveBeenCalledWith({
         where: { id: draftId, hostId: differentHostId },
       });
-      expect(prisma.draftListing.delete).not.toHaveBeenCalled();
+      expect(deleteSpy).not.toHaveBeenCalled();
     });
   });
 });

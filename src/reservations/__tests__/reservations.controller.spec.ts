@@ -1,8 +1,8 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { AuthUser } from '@src/auth/auth-user';
 import { ReservationsController } from '@src/reservations/reservations.controller';
 import { ReservationsService } from '@src/reservations/reservations.service';
-import { AuthUser } from '@src/auth/auth-user';
-import { BadRequestException } from '@nestjs/common';
 
 const mockReservationsService = {
   create: jest.fn(),
@@ -17,7 +17,6 @@ const mockUser: AuthUser = {
 
 describe('ReservationsController', () => {
   let controller: ReservationsController;
-  let service: ReservationsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,7 +30,6 @@ describe('ReservationsController', () => {
     }).compile();
 
     controller = module.get<ReservationsController>(ReservationsController);
-    service = module.get<ReservationsService>(ReservationsService);
     jest.clearAllMocks();
   });
 
@@ -57,7 +55,7 @@ describe('ReservationsController', () => {
         mockUser,
       );
 
-      expect(service.create).toHaveBeenCalledWith(
+      expect(mockReservationsService.create).toHaveBeenCalledWith(
         listingId,
         createReservationDto,
         mockUser,

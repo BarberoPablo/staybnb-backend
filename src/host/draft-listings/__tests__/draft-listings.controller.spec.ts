@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DraftListingsController } from '../draft-listings.controller';
-import { DraftListingsService } from '../draft-listings.service';
 import { UserRole } from '@prisma/client';
 import { AuthGuard } from '@src/auth/auth.guard';
+import { DraftListingsController } from '../draft-listings.controller';
+import { DraftListingsService } from '../draft-listings.service';
 
 describe('DraftListingsController', () => {
   let controller: DraftListingsController;
-  let service: DraftListingsService;
 
   const mockDraftListingsService = {
     remove: jest.fn(),
@@ -31,7 +30,6 @@ describe('DraftListingsController', () => {
       .compile();
 
     controller = module.get<DraftListingsController>(DraftListingsController);
-    service = module.get<DraftListingsService>(DraftListingsService);
   });
 
   it('should be defined', () => {
@@ -43,11 +41,12 @@ describe('DraftListingsController', () => {
       const userId = 'user123';
       const draftId = 'draft456';
       const supabaseId = '';
+      const email = 'test@test.com';
 
       mockDraftListingsService.remove.mockResolvedValue(undefined);
 
       const result = await controller.remove(
-        { id: userId, role: UserRole.USER, supabaseId },
+        { id: userId, role: UserRole.USER, supabaseId, email },
         draftId,
       );
       expect(mockDraftListingsService.remove).toHaveBeenCalledWith(
@@ -61,13 +60,14 @@ describe('DraftListingsController', () => {
       const userId = 'user123';
       const draftId = 'draft456';
       const supabaseId = '';
+      const email = 'test@test.com';
 
       const error = new Error('Service error');
       mockDraftListingsService.remove.mockRejectedValue(error);
 
       await expect(
         controller.remove(
-          { id: userId, role: UserRole.USER, supabaseId },
+          { id: userId, role: UserRole.USER, supabaseId, email },
           draftId,
         ),
       ).rejects.toThrow(error);

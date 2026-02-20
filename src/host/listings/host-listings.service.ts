@@ -55,12 +55,16 @@ export class HostListingsService {
       );
     }
 
-    this.prisma.listing.update({
-      where: { id: listingId },
-      data: {
-        status: ListingStatus.PENDING,
-      },
-    });
+    try {
+      await this.prisma.listing.update({
+        where: { id: listingId },
+        data: {
+          status: ListingStatus.PENDING,
+        },
+      });
+    } catch {
+      throw new BadRequestException('Failed to resubmit listing');
+    }
 
     return { success: true };
   }
