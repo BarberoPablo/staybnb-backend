@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { z } from 'zod';
 import { createPrismaClient } from './prisma.factory';
 
 interface CityData {
@@ -8,6 +9,17 @@ interface CityData {
   lat: number;
   lng: number;
 }
+
+const GeoapifyResponseSchema = z.object({
+  features: z.array(
+    z.object({
+      properties: z.object({
+        lat: z.number(),
+        lon: z.number(),
+      }),
+    }),
+  ),
+});
 
 async function geocodeCityWithDebug(
   cityName: string,
@@ -38,8 +50,8 @@ async function geocodeCityWithDebug(
       return null;
     }
 
-    const data = await response.json();
-    console.log(`📋 API Response:`, JSON.stringify(data, null, 2));
+    const json: unknown = await response.json();
+    const data = GeoapifyResponseSchema.parse(json);
 
     if (data.features && data.features.length > 0) {
       const feature = data.features[0];
@@ -166,7 +178,7 @@ async function populateCities() {
     console.log('\n🏙️ Sample cities:');
     sampleCities.forEach((city, index) => {
       console.log(
-        `${index + 1}. ${city.name}, ${city.state || city.country || 'Unknown'} - ${city.lat}, ${city.lng}`,
+        `${index + 1}. ${city.name}, ${city.state || city.country || 'Unknown'} - ${Number(city.lat)}, ${Number(city.lng)}`,
       );
     });
   } catch (error) {
