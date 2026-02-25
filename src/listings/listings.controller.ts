@@ -1,8 +1,9 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { Public } from '@src/auth/public.decorator';
-import { ListingResponseDto } from 'src/listings/dto/listing-response.dto';
-import { mapListingToResponse } from 'src/listings/dto/listings.mapper';
-import { ListingsService } from './listings.service';
+import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
+import { mapListingToResponse } from '@src/listings/dto/listings.mapper';
+import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
+import { ListingsService } from '@src/listings/listings.service';
 
 @Public()
 @Controller('listings')
@@ -10,14 +11,10 @@ export class ListingsController {
   constructor(private readonly service: ListingsService) {}
 
   @Get()
-  async findAll(): Promise<ListingResponseDto[]> {
-    const listings = await this.service.findAll();
+  async getListings(
+    @Query() query: GetListingsQueryDto,
+  ): Promise<ListingResponseDto[]> {
+    const listings = await this.service.search(query);
     return listings.map(mapListingToResponse);
-  }
-
-  @Get(':id')
-  async find(@Param('id') id: string): Promise<ListingResponseDto> {
-    const listing = await this.service.findById(id);
-    return mapListingToResponse(listing);
   }
 }

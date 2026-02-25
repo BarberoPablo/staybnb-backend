@@ -1,36 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ListingStatus } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '@src/prisma/prisma.service';
+import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
+import { ListingWithAmenities } from '@src/listings/dto/listing.types';
 
 @Injectable()
 export class ListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  async search(query: GetListingsQueryDto): Promise<ListingWithAmenities[]> {
+    const limit = query.limit ?? 20;
+    const offset = query.offset ?? 0;
+
     return this.prisma.listing.findMany({
       where: { status: ListingStatus.PUBLISHED },
       include: {
         amenities: true,
       },
       orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
     });
-  }
-
-  async findById(id: string) {
-    const listing = await this.prisma.listing.findFirst({
-      where: {
-        id,
-        status: ListingStatus.PUBLISHED,
-      },
-      include: {
-        amenities: true,
-      },
-    });
-
-    if (!listing) {
-      throw new NotFoundException('Listing not found');
-    }
-
-    return listing;
   }
 }

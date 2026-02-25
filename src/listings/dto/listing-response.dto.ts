@@ -29,10 +29,10 @@ export class ListingResponseDto {
     pets: { min: number; max: number };
   };
 
-  amenities: string[];
-
   status: ListingStatus;
 
   createdAt: Date;
   updatedAt: Date;
+
+  amenities?: string[];
 }
