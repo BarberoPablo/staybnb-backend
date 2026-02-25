@@ -474,7 +474,7 @@ async function generateReservationsForMonthParam() {
 
     // Bulk create all reservations
     const createdReservations = await prisma.reservation.createMany({
-      data: reservationsData, // eslint-disable-line @typescript-eslint/no-explicit-any
+      data: reservationsData,
     });
 
     console.log(
@@ -542,7 +542,7 @@ async function generateReservationsForMonthParam() {
         `   ${startDate} to ${endDate} (${reservation.totalNights} nights)`,
       );
       console.log(
-        `   ${guestText} - $${reservation.totalPrice}${discountText} - Status: ${reservation.status}`,
+        `   ${guestText} - $${Number(reservation.totalPrice)}${discountText} - Status: ${reservation.status}`,
       );
     });
 

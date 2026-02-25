@@ -9,6 +9,7 @@ import {
   Prisma,
   PrivacyType,
   PropertyType,
+  Reservation,
 } from '@prisma/client';
 import { AuthUser } from '@src/auth/auth-user';
 import { PrismaService } from '@src/prisma/prisma.service';
@@ -200,7 +201,7 @@ describe('ReservationsService', () => {
             totalNights: expectedNights,
             discount: expectedDiscount,
             discountPercentage: expectedDiscountPercentage,
-          }),
+          }) as Partial<Reservation>,
         }),
       );
     });
