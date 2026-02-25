@@ -1,7 +1,7 @@
 import {
   parseLocationFromDBToResponse,
   parsePromotionsFromDBToResponse,
-} from 'src/host/draft-listings/draft-listings.mapper';
+} from '@src/host/draft-listings/draft-listings.mapper';
 import { ListingResponseDto } from './listing-response.dto';
 import { ListingWithAmenities } from './listing.types';
 
