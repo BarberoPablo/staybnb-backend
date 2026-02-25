@@ -13,3 +13,6 @@ Visual UI:
 
 Testing
 npm run test fileRoute
+
+Lint
+npm run lint

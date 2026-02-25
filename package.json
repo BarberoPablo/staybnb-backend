@@ -18,7 +18,13 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:amenities": "tsx src/prisma/seed/amenities.ts"
+    "seed:amenities": "tsx src/prisma/seed/amenities.ts",
+    "seed:profiles": "tsx src/prisma/seed/profiles.ts",
+    "seed:listings": "tsx src/prisma/seed/listings.ts",
+    "seed:draft-listings": "tsx src/prisma/seed/draftListings.ts",
+    "seed:reservations": "tsx src/prisma/seed/reservations.ts",
+    "seed:cities": "tsx src/prisma/seed/cities.ts",
+    "seed:testing": "tsx src/prisma/seed/testing.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -45,6 +51,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
+    "@faker-js/faker": "^10.3.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
@@ -53,6 +60,7 @@
     "@types/node": "^22.10.7",
     "@types/pg": "^8.16.0",
     "@types/supertest": "^6.0.2",
+    "date-fns-tz": "^3.2.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
