@@ -23,6 +23,7 @@
     "seed:listings": "tsx src/prisma/seed/listings.ts",
     "seed:draft-listings": "tsx src/prisma/seed/draftListings.ts",
     "seed:reservations": "tsx src/prisma/seed/reservations.ts",
+    "seed:cities": "tsx src/prisma/seed/cities.ts",
     "seed:testing": "tsx src/prisma/seed/testing.ts"
   },
   "dependencies": {
