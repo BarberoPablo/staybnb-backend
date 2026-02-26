@@ -199,5 +199,27 @@ describe('ListingsService', () => {
         skip: 0,
       });
     });
+
+    it('should trim city and country in the where clause', async () => {
+      const findManySpy = jest
+        .spyOn(prisma.listing, 'findMany')
+        .mockResolvedValue([]);
+
+      const query: GetListingsQueryDto = {
+        city: ' Paris ',
+        country: ' France ',
+      };
+      await service.search(query);
+
+      expect(findManySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            status: ListingStatus.PUBLISHED,
+            city: 'Paris',
+            country: 'France',
+          },
+        }),
+      );
+    });
   });
 });
