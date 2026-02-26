@@ -76,5 +76,14 @@ describe('ListingsController', () => {
       expect(result[0].id).toBe('listing-id');
       expect(result[0].title).toBe('Title');
     });
+
+    it('should call service search with city and country filter', async () => {
+      mockListingsService.search.mockResolvedValue([]);
+
+      const query: GetListingsQueryDto = { city: 'Paris', country: 'France' };
+      await controller.getListings(query);
+
+      expect(mockListingsService.search).toHaveBeenCalledWith(query);
+    });
   });
 });
