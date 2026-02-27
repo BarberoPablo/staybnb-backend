@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ReservationStatus } from '@prisma/client';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingWithOptionalRelations } from '@src/listings/dto/listing.types';
 import { PrismaService } from '@src/prisma/prisma.service';
@@ -74,6 +74,8 @@ export class ListingsService {
       ? query.include.split(',').map((value) => value.trim())
       : [];
 
+    let includeReservations = false;
+
     for (const includeParam of includeParams) {
       if (!includeParam) {
         continue;
@@ -94,11 +96,36 @@ export class ListingsService {
       }
 
       if (includeParam === 'reservations') {
-        include.reservations = true;
+        includeReservations = true;
+
+        include.reservations = {
+          where: {
+            status: ReservationStatus.UPCOMING,
+            endDate: {
+              gte: new Date(),
+            },
+          },
+          orderBy: {
+            startDate: 'asc',
+          },
+        };
       }
 
       if (includeParam === '_count') {
-        include._count = true;
+        include._count = {
+          select: {
+            reservations: includeReservations
+              ? {
+                  where: {
+                    status: ReservationStatus.UPCOMING,
+                    endDate: {
+                      gte: new Date(),
+                    },
+                  },
+                }
+              : true,
+          },
+        };
       }
     }
 
