@@ -1,4 +1,9 @@
-import { Prisma } from '@prisma/client';
+import type {
+  Listing,
+  ListingAmenity,
+  Profile,
+  Reservation,
+} from '@prisma/client';
 
 export type DraftListingLocation = {
   country: string;
@@ -52,11 +57,15 @@ export type GuestLimits = {
   pets: { min: number; max: number };
 };
 
-export type ListingWithAmenities = Prisma.ListingGetPayload<{
-  include: {
-    amenities: true;
-  };
-}>;
-
 export const guests = ['adults', 'children', 'infant', 'pets'] as const;
 export type Guests = (typeof guests)[number];
+
+export type ListingWithOptionalRelations = Listing & {
+  amenities?: ListingAmenity[];
+  host?: Profile;
+  reservations?: Reservation[];
+  _count?: {
+    reservations?: number;
+    favorites?: number;
+  };
+};

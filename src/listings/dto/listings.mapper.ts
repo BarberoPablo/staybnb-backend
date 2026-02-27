@@ -3,15 +3,15 @@ import {
   parsePromotionsFromDBToResponse,
 } from '@src/host/draft-listings/draft-listings.mapper';
 import { ListingResponseDto } from './listing-response.dto';
-import { ListingWithAmenities } from './listing.types';
+import { ListingWithOptionalRelations } from './listing.types';
 
 export function mapListingToResponse(
-  listing: ListingWithAmenities,
+  listing: ListingWithOptionalRelations,
 ): ListingResponseDto {
   const location = parseLocationFromDBToResponse(listing.location);
   const promotions = parsePromotionsFromDBToResponse(listing.promotions);
 
-  return {
+  const response: ListingResponseDto = {
     id: listing.id,
     title: listing.title,
     description: listing.description,
@@ -38,11 +38,29 @@ export function mapListingToResponse(
     propertyType: listing.propertyType,
     privacyType: listing.privacyType,
 
-    amenities: listing.amenities.map((amenity) => amenity.amenityId),
-
     status: listing.status,
 
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
   };
+
+  if (listing.amenities) {
+    response.amenities = listing.amenities.map((amenity) => amenity.amenityId);
+  }
+
+  if (listing.host) {
+    response.host = listing.host;
+  }
+
+  if (listing.reservations) {
+    response.reservations = listing.reservations;
+  }
+
+  if (listing._count && typeof listing._count.reservations === 'number') {
+    response.counts = {
+      reservations: listing._count.reservations,
+    };
+  }
+
+  return response;
 }

@@ -30,4 +30,8 @@ export class GetListingsQueryDto {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @IsString()
+  include?: string; // comma-separated
 }

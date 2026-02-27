@@ -1,4 +1,10 @@
-import { ListingStatus, PrivacyType, PropertyType } from '@prisma/client';
+import {
+  ListingStatus,
+  PrivacyType,
+  Profile,
+  PropertyType,
+  Reservation,
+} from '@prisma/client';
 import { ListingLocation, Promotion } from './listing.types';
 
 export class ListingResponseDto {
@@ -35,4 +41,12 @@ export class ListingResponseDto {
   updatedAt: Date;
 
   amenities?: string[];
+  host?: Profile;
+  reservations?: Reservation[];
+  counts?: ListingCountsDto;
+}
+
+export class ListingCountsDto {
+  reservations?: number;
+  favorites?: number;
 }
