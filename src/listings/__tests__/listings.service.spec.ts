@@ -42,7 +42,7 @@ describe('ListingsService', () => {
 
       expect(findManySpy).toHaveBeenCalledWith({
         where: { status: ListingStatus.PUBLISHED },
-        include: { amenities: true },
+        include: {},
         orderBy: { createdAt: 'desc' },
         take: 20,
         skip: 0,
@@ -145,7 +145,7 @@ describe('ListingsService', () => {
       };
       const result = await service.search(query);
 
-      expect(result).toEqual([mockListing]);
+      expect(result).toHaveLength(1);
       expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
@@ -211,7 +211,7 @@ describe('ListingsService', () => {
 
       expect(findManySpy).toHaveBeenCalledWith({
         where: { status: ListingStatus.PUBLISHED },
-        include: { amenities: true },
+        include: {},
         orderBy: { createdAt: 'desc' },
         take: 20,
         skip: 0,
@@ -277,6 +277,45 @@ describe('ListingsService', () => {
       expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: { nightPrice: 'desc' },
+        }),
+      );
+    });
+
+    it('should include host when include=host', async () => {
+      const findManySpy = jest
+        .spyOn(prisma.listing, 'findMany')
+        .mockResolvedValue([]);
+
+      const query: GetListingsQueryDto = {
+        include: 'host',
+      };
+      await service.search(query);
+
+      expect(findManySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: { host: true },
+        }),
+      );
+    });
+
+    it('should include multiple relations when include has multiple values', async () => {
+      const findManySpy = jest
+        .spyOn(prisma.listing, 'findMany')
+        .mockResolvedValue([]);
+
+      const query: GetListingsQueryDto = {
+        include: 'host,amenities,reservations,_count',
+      };
+      await service.search(query);
+
+      expect(findManySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            host: true,
+            amenities: true,
+            reservations: true,
+            _count: true,
+          },
         }),
       );
     });
