@@ -1,15 +1,21 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
+import { ListingWithOptionalRelations } from '@src/listings/dto/listing.types';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { buildListingsWhere } from './builders/build-listings-where';
-import { ALLOWED_SEARCH_INCLUDES } from './utils/listings.utils';
+import {
+  ALLOWED_SEARCH_INCLUDES,
+  ALLOWED_SINGLE_LISTING_INCLUDES,
+} from './utils/listings.utils';
 
 @Injectable()
 export class ListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async search(query: GetListingsQueryDto) {
+  async search(
+    query: GetListingsQueryDto,
+  ): Promise<ListingWithOptionalRelations[]> {
     const limit = query.limit ?? 20;
     const offset = query.offset ?? 0;
 
@@ -38,10 +44,6 @@ export class ListingsService {
         include.amenities = true;
       }
 
-      if (includeParam === 'reservations') {
-        include.reservations = true;
-      }
-
       if (includeParam === '_count') {
         include._count = true;
       }
@@ -60,5 +62,51 @@ export class ListingsService {
     });
 
     return listings;
+  }
+
+  async findById(
+    id: string,
+    query: GetListingsQueryDto,
+  ): Promise<ListingWithOptionalRelations> {
+    const include: Prisma.ListingInclude = {};
+
+    const includeParams = query.include
+      ? query.include.split(',').map((value) => value.trim())
+      : [];
+
+    for (const includeParam of includeParams) {
+      if (!includeParam) {
+        continue;
+      }
+
+      if (!ALLOWED_SINGLE_LISTING_INCLUDES.has(includeParam)) {
+        throw new BadRequestException(
+          `Include '${includeParam}' is not allowed in GET /listings/:id endpoint`,
+        );
+      }
+
+      if (includeParam === 'host') {
+        include.host = true;
+      }
+
+      if (includeParam === 'amenities') {
+        include.amenities = true;
+      }
+
+      if (includeParam === 'reservations') {
+        include.reservations = true;
+      }
+
+      if (includeParam === '_count') {
+        include._count = true;
+      }
+    }
+
+    const listing = await this.prisma.listing.findUniqueOrThrow({
+      where: { id },
+      include,
+    });
+
+    return listing;
   }
 }

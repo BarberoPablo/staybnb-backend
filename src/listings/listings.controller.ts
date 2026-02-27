@@ -1,8 +1,8 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Public } from '@src/auth/public.decorator';
+import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
 import { mapListingToResponse } from '@src/listings/dto/listings.mapper';
-import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingsService } from '@src/listings/listings.service';
 
 @Public()
@@ -16,5 +16,14 @@ export class ListingsController {
   ): Promise<ListingResponseDto[]> {
     const listings = await this.service.search(query);
     return listings.map(mapListingToResponse);
+  }
+
+  @Get(':id')
+  async getListingById(
+    @Param('id') id: string,
+    @Query() query: GetListingsQueryDto,
+  ): Promise<ListingResponseDto> {
+    const listing = await this.service.findById(id, query);
+    return mapListingToResponse(listing);
   }
 }

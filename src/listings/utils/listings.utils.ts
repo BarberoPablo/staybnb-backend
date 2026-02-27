@@ -30,3 +30,10 @@ export function twoDecimals(data: number): number {
 }
 
 export const ALLOWED_SEARCH_INCLUDES = new Set(['host', 'amenities', '_count']);
+
+export const ALLOWED_SINGLE_LISTING_INCLUDES = new Set([
+  'host',
+  'amenities',
+  'reservations',
+  '_count',
+]);
