@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class GetListingsQueryDto {
   @IsOptional()
@@ -22,4 +22,12 @@ export class GetListingsQueryDto {
   @IsOptional()
   @IsString()
   country?: string;
+
+  @IsOptional()
+  @IsIn(['createdAt', 'nightPrice'])
+  sortBy?: 'createdAt' | 'nightPrice';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc';
 }

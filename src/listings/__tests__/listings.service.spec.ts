@@ -245,5 +245,40 @@ describe('ListingsService', () => {
         }),
       );
     });
+
+    it('should apply sorting when sortBy and sortOrder are provided', async () => {
+      const findManySpy = jest
+        .spyOn(prisma.listing, 'findMany')
+        .mockResolvedValue([]);
+
+      const query: GetListingsQueryDto = {
+        sortBy: 'nightPrice',
+        sortOrder: 'asc',
+      };
+      await service.search(query);
+
+      expect(findManySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { nightPrice: 'asc' },
+        }),
+      );
+    });
+
+    it('should default sortOrder to desc when only sortBy is provided', async () => {
+      const findManySpy = jest
+        .spyOn(prisma.listing, 'findMany')
+        .mockResolvedValue([]);
+
+      const query: GetListingsQueryDto = {
+        sortBy: 'nightPrice',
+      };
+      await service.search(query);
+
+      expect(findManySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { nightPrice: 'desc' },
+        }),
+      );
+    });
   });
 });
