@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingWithAmenities } from '@src/listings/dto/listing.types';
 import { PrismaService } from '@src/prisma/prisma.service';
@@ -14,12 +15,16 @@ export class ListingsService {
 
     const where = buildListingsWhere(query);
 
+    const orderBy: Prisma.ListingOrderByWithRelationInput = query.sortBy
+      ? { [query.sortBy]: query.sortOrder ?? 'desc' }
+      : { createdAt: 'desc' };
+
     return this.prisma.listing.findMany({
       where,
       include: {
         amenities: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       take: limit,
       skip: offset,
     });
