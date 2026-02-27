@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
-import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { mapListingToResponse } from '@src/listings/dto/listings.mapper';
 import { buildListingsWhere } from './builders/build-listings-where';
+import { ALLOWED_SEARCH_INCLUDES } from './utils/listings.utils';
 
 @Injectable()
 export class ListingsService {
@@ -24,6 +23,12 @@ export class ListingsService {
 
     for (const includeParam of includeParams) {
       if (!includeParam) continue;
+
+      if (!ALLOWED_SEARCH_INCLUDES.has(includeParam)) {
+        throw new BadRequestException(
+          `Include '${includeParam}' is not allowed in GET /listings search endpoint`,
+        );
+      }
 
       if (includeParam === 'host') {
         include.host = true;
