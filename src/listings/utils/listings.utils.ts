@@ -28,3 +28,5 @@ export function getListingPromotionDB(
 export function twoDecimals(data: number): number {
   return Number(data.toFixed(2));
 }
+
+export const ALLOWED_SEARCH_INCLUDES = new Set(['host', 'amenities', '_count']);
