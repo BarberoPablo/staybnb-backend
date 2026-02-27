@@ -1,26 +1,5 @@
-import { Listing, ListingStatus, Prisma } from '@prisma/client';
-import { GetListingsQueryDto } from './get-listings-query.dto';
-import { Guests, Promotion } from './listing.types';
-
-export function buildListingsWhere(
-  query: GetListingsQueryDto,
-): Prisma.ListingWhereInput {
-  const where: Prisma.ListingWhereInput = {
-    status: ListingStatus.PUBLISHED,
-  };
-
-  const city = query.city?.trim();
-  if (city) {
-    where.city = city;
-  }
-
-  const country = query.country?.trim();
-  if (country) {
-    where.country = country;
-  }
-
-  return where;
-}
+import { Listing } from '@prisma/client';
+import { Guests, Promotion } from '../dto/listing.types';
 
 export function getTotalGuests(guests: Record<Guests, number>) {
   return Object.values(guests).reduce((total, count) => total + count, 0);

@@ -77,7 +77,10 @@ describe('ListingsService', () => {
         expect.objectContaining({
           where: {
             status: ListingStatus.PUBLISHED,
-            city: 'Paris',
+            city: {
+              equals: 'Paris',
+              mode: 'insensitive',
+            },
           },
         }),
       );
@@ -95,7 +98,10 @@ describe('ListingsService', () => {
         expect.objectContaining({
           where: {
             status: ListingStatus.PUBLISHED,
-            country: 'France',
+            country: {
+              equals: 'France',
+              mode: 'insensitive',
+            },
           },
         }),
       );
@@ -114,8 +120,14 @@ describe('ListingsService', () => {
         expect.objectContaining({
           where: {
             status: ListingStatus.PUBLISHED,
-            city: 'Paris',
-            country: 'France',
+            city: {
+              equals: 'Paris',
+              mode: 'insensitive',
+            },
+            country: {
+              equals: 'France',
+              mode: 'insensitive',
+            },
           },
         }),
       );
@@ -138,8 +150,14 @@ describe('ListingsService', () => {
         expect.objectContaining({
           where: {
             status: ListingStatus.PUBLISHED,
-            city: 'San Francisco',
-            country: 'United States',
+            city: {
+              equals: 'San Francisco',
+              mode: 'insensitive',
+            },
+            country: {
+              equals: 'United States',
+              mode: 'insensitive',
+            },
           },
         }),
       );
@@ -215,8 +233,14 @@ describe('ListingsService', () => {
         expect.objectContaining({
           where: {
             status: ListingStatus.PUBLISHED,
-            city: 'Paris',
-            country: 'France',
+            city: {
+              equals: 'Paris',
+              mode: 'insensitive',
+            },
+            country: {
+              equals: 'France',
+              mode: 'insensitive',
+            },
           },
         }),
       );

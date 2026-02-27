@@ -15,7 +15,7 @@ import {
   getListingPromotionDB,
   getTotalGuests,
   twoDecimals,
-} from '@src/listings/dto/listings.utils';
+} from '@src/listings/utils/listings.utils';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateReservationDto } from './dto/reservations-create.dto';
 

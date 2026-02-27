@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingWithAmenities } from '@src/listings/dto/listing.types';
-import { buildListingsWhere } from '@src/listings/dto/listings.utils';
 import { PrismaService } from '@src/prisma/prisma.service';
+import { buildListingsWhere } from './builders/build-listings-where';
 
 @Injectable()
 export class ListingsService {
