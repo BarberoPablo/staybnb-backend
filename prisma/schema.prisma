@@ -156,7 +156,7 @@ model Reservation {
   createdAt  DateTime  @default(now()) @db.Timestamptz(6)
   canceledAt DateTime? @db.Timestamptz(6)
 
-  @@index([listingId])
+  @@index([listingId, createdAt])
   @@index([userId])
 }
 
