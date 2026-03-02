@@ -209,8 +209,8 @@ model City {
   name      String
   state     String?
   country   String?
-  lat       Decimal  @db.Decimal(10, 8)
-  lng       Decimal  @db.Decimal(11, 8)
+  lat       Float
+  lng       Float
   createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@unique([name, state, country])

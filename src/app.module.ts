@@ -5,6 +5,7 @@ import * as Joi from 'joi';
 import { AdminListingsModule } from './admin/listings/admin-listings.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
+import { CitiesModule } from './cities/cities.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { DraftListingsModule } from './host/draft-listings/draft-listings.module';
@@ -37,6 +38,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     ListingsModule,
     ReservationsModule,
     EmailModule,
+    CitiesModule,
   ],
   providers: [
     {
