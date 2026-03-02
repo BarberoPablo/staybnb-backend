@@ -3,6 +3,7 @@ import type {
   ListingAmenity,
   Profile,
   Reservation,
+  Review,
 } from '@prisma/client';
 
 export type DraftListingLocation = {
@@ -64,6 +65,7 @@ export type ListingWithOptionalRelations = Listing & {
   amenities?: ListingAmenity[];
   host?: Profile;
   reservations?: Reservation[];
+  reviews?: Review[];
   _count?: {
     reservations?: number;
     favorites?: number;

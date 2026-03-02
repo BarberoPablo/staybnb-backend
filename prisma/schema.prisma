@@ -24,6 +24,7 @@ model Profile {
   reservations  Reservation[]
   listings      Listing[]
   moderations   ListingModeration[]
+  reviews       Review[]
 }
 
 model Listing {
@@ -36,7 +37,6 @@ model Listing {
   host        Profile       @relation(fields: [hostId], references: [id], onDelete: Cascade)
   images      String[]
   promotions  Json          @default("[]")
-  score       Json          @default("[]")
 
   // Structure
   beds      Int
@@ -58,6 +58,11 @@ model Listing {
   lat      Float
   lng      Float
   location Json
+
+  // Reviews
+  ratingAvg   Float    @default(0)
+  ratingCount Int      @default(0)
+  reviews     Review[]
 
   checkInTime   String @default("15:00")
   checkOutTime  String @default("11:00")
@@ -210,6 +215,22 @@ model City {
 
   @@unique([name, state, country])
   @@index([name])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  listingId String
+  score     Int
+  message   String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([listingId, createdAt])
+  @@index([userId])
 }
 
 enum UserRole {

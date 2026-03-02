@@ -111,6 +111,10 @@ export class ListingsService {
         };
       }
 
+      if (includeParam === 'reviews') {
+        include.reviews = true;
+      }
+
       if (includeParam === '_count') {
         include._count = {
           select: {
