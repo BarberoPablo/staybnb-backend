@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma, ReservationStatus } from '@prisma/client';
+import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
+import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingWithOptionalRelations } from '@src/listings/dto/listing.types';
 import { PrismaService } from '@src/prisma/prisma.service';
@@ -12,6 +13,37 @@ import {
 @Injectable()
 export class ListingsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getFeaturedListings(
+    query: GetFeaturedListingsQueryDto,
+  ): Promise<ListingWithOptionalRelations[]> {
+    const limit = query.limit ?? 12;
+    const offset = query.offset ?? 0;
+
+    const listings = await this.prisma.listing.findMany({
+      where: {
+        status: ListingStatus.PUBLISHED,
+        ratingAvg: {
+          gte: 4,
+        },
+      },
+      orderBy: [
+        {
+          ratingAvg: 'desc',
+        },
+        {
+          ratingCount: 'desc',
+        },
+        {
+          createdAt: 'desc',
+        },
+      ],
+      take: limit,
+      skip: offset,
+    });
+
+    return listings;
+  }
 
   async search(
     query: GetListingsQueryDto,
