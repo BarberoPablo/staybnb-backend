@@ -25,6 +25,7 @@
     "seed:draft-listings": "tsx src/prisma/seed/draftListings.ts",
     "seed:reservations": "tsx src/prisma/seed/reservations.ts",
     "seed:cities": "tsx src/prisma/seed/cities.ts",
+    "seed:reviews": "tsx src/prisma/seed/reviews.ts",
     "seed:testing": "tsx src/prisma/seed/testing.ts"
   },
   "dependencies": {

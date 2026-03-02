@@ -35,5 +35,6 @@ export const ALLOWED_SINGLE_LISTING_INCLUDES = new Set([
   'host',
   'amenities',
   'reservations',
+  'reviews',
   '_count',
 ]);

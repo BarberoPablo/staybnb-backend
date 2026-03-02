@@ -4,6 +4,7 @@ import {
   Profile,
   PropertyType,
   Reservation,
+  Review,
 } from '@prisma/client';
 import { ListingLocation, Promotion } from './listing.types';
 
@@ -36,6 +37,8 @@ export class ListingResponseDto {
   };
 
   status: ListingStatus;
+  ratingAvg: number;
+  ratingCount: number;
 
   createdAt: Date;
   updatedAt: Date;
@@ -43,6 +46,7 @@ export class ListingResponseDto {
   amenities?: string[];
   host?: Profile;
   reservations?: Reservation[];
+  reviews?: Review[];
   counts?: ListingCountsDto;
 }
 

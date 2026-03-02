@@ -39,6 +39,8 @@ export function mapListingToResponse(
     privacyType: listing.privacyType,
 
     status: listing.status,
+    ratingAvg: listing.ratingAvg,
+    ratingCount: listing.ratingCount,
 
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
@@ -56,10 +58,24 @@ export function mapListingToResponse(
     response.reservations = listing.reservations;
   }
 
-  if (listing._count && typeof listing._count.reservations === 'number') {
-    response.counts = {
-      reservations: listing._count.reservations,
-    };
+  if (listing.reviews) {
+    response.reviews = listing.reviews;
+  }
+
+  if (listing._count) {
+    const counts: ListingResponseDto['counts'] = {};
+
+    if (typeof listing._count.reservations === 'number') {
+      counts.reservations = listing._count.reservations;
+    }
+
+    if (typeof listing._count.favorites === 'number') {
+      counts.favorites = listing._count.favorites;
+    }
+
+    if (Object.keys(counts).length > 0) {
+      response.counts = counts;
+    }
   }
 
   return response;

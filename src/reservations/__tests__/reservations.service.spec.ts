@@ -60,7 +60,6 @@ const mockListing = {
   title: 'Test Listing',
   description: 'Test Description',
   images: [],
-  score: [],
   city: 'Test City',
   country: 'Test Country',
   lat: 0,
