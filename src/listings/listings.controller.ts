@@ -31,6 +31,18 @@ export class ListingsController {
     return listings.map(mapListingToResponse);
   }
 
+  @Get('popular')
+  @Header(
+    'Cache-Control',
+    'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+  )
+  async getPopularListings(
+    @Query() query: GetFeaturedListingsQueryDto,
+  ): Promise<ListingResponseDto[]> {
+    const listings = await this.service.getPopularListings(query);
+    return listings.map(mapListingToResponse);
+  }
+
   @Get(':id')
   async getListingById(
     @Param('id') id: string,

@@ -45,6 +45,51 @@ export class ListingsService {
     return listings;
   }
 
+  async getPopularListings(
+    query: GetFeaturedListingsQueryDto,
+  ): Promise<ListingWithOptionalRelations[]> {
+    const limit = query.limit ?? 12;
+    const offset = query.offset ?? 0;
+
+    const now = new Date();
+    const lastMonth = new Date(now);
+    lastMonth.setDate(now.getDate() - 30);
+
+    const listings = await this.prisma.listing.findMany({
+      where: {
+        status: ListingStatus.PUBLISHED,
+      },
+      include: {
+        _count: {
+          select: {
+            reservations: {
+              where: {
+                createdAt: {
+                  gte: lastMonth,
+                },
+              },
+            },
+            favorites: true,
+          },
+        },
+      },
+      orderBy: [
+        {
+          reservations: {
+            _count: 'desc',
+          },
+        },
+        {
+          createdAt: 'desc',
+        },
+      ],
+      take: limit,
+      skip: offset,
+    });
+
+    return listings;
+  }
+
   async search(
     query: GetListingsQueryDto,
   ): Promise<ListingWithOptionalRelations[]> {
