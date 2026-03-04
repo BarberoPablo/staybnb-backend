@@ -38,3 +38,12 @@ export const ALLOWED_SINGLE_LISTING_INCLUDES = new Set([
   'reviews',
   '_count',
 ]);
+
+export function buildSearchInclude(include?: string): string[] {
+  return include
+    ? include
+        .split(',')
+        .map((value) => value.trim())
+        .filter((value) => !!value)
+    : [];
+}
