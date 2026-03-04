@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { mapListingToResponse } from '@src/listings/mappers/listings.mapper';
 import type { AuthUser } from 'src/auth/auth-user';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { ListingResponseDto } from 'src/listings/dto/listing-response.dto';
-import { mapListingToResponse } from 'src/listings/dto/listings.mapper';
 import { Roles } from 'src/roles/roles.decorator';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { AdminListingsService } from './admin-listings.service';

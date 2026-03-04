@@ -3,8 +3,8 @@ import { Public } from '@src/auth/public.decorator';
 import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
-import { mapListingToResponse } from '@src/listings/dto/listings.mapper';
 import { ListingsService } from '@src/listings/listings.service';
+import { mapListingToResponse } from '@src/listings/mappers/listings.mapper';
 
 @Public()
 @Controller('listings')

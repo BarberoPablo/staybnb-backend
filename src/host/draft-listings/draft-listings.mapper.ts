@@ -1,14 +1,14 @@
 import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
 import {
-  DraftListingLocation,
+  ListingLocation,
+  ListingLocationResponse,
   Promotion,
-} from 'src/listings/dto/listing.types';
+} from '@src/listings/types/listing.types';
 import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
 
 export function mapDraftListingDbToResponse(
   draft: PrismaDraftListing,
 ): DraftListingResponseDto {
-  const locationResponse = parseLocationFromDBToResponse(draft.location);
   const promotionsResponse = parsePromotionsFromDBToResponse(draft.promotions);
 
   const structure = {
@@ -29,7 +29,7 @@ export function mapDraftListingDbToResponse(
     hostId: draft.hostId,
     propertyType: draft.propertyType,
     privacyType: draft.privacyType,
-    location: locationResponse,
+    location: draft.location as ListingLocationResponse,
     checkInTime: draft.checkInTime,
     checkOutTime: draft.checkOutTime,
     title: draft.title,
@@ -63,12 +63,27 @@ export function mapDraftListingDbToResponse(
  * This does NOT transform data. It only validates the minimal shape and asserts the contract expected by the API.
  */
 export function parseLocationFromDBToResponse(
-  location: Prisma.JsonValue,
-): DraftListingLocation {
+  location: ListingLocation,
+  country: string,
+  city: string,
+  lat: number,
+  lng: number,
+): ListingLocationResponse {
   if (!location || typeof location !== 'object') {
     throw new Error('Invalid location');
   }
-  return location as DraftListingLocation;
+  return {
+    country,
+    city,
+    lat,
+    lng,
+    formatted: location.formatted,
+    housenumber: location.housenumber,
+    street: location.street,
+    state: location.state,
+    postcode: location.postcode,
+    timezone: location.timezone,
+  };
 }
 
 /**

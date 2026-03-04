@@ -1,4 +1,4 @@
-import { Guests } from '@src/listings/dto/listing.types';
+import { Guests } from '@src/listings/types/listing.types';
 import { Type } from 'class-transformer';
 import { IsDate, IsNotEmpty, IsObject } from 'class-validator';
 

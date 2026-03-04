@@ -1,4 +1,4 @@
-import { Guests } from '@src/listings/dto/listing.types';
+import { Guests } from '@src/listings/types/listing.types';
 
 export interface ReservationEmailData {
   // User information

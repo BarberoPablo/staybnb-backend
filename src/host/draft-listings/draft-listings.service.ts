@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DraftListing, Prisma } from '@prisma/client';
+import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { completedDraftListingTemplate } from './draft-listing.utils';
 import {
@@ -12,13 +12,14 @@ import {
 } from './draft-listings.mapper';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
+import { DraftListing } from './dto/draft-listing.types';
 import { validateDraftForCompletion } from './validation/validate-complete-draft';
 
 @Injectable()
 export class DraftListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(hostId: string): Promise<DraftListing> {
+  create(hostId: string): Promise<PrismaDraftListing> {
     return this.prisma.draftListing.create({
       data: { hostId },
     });
@@ -75,14 +76,14 @@ export class DraftListingsService {
     }
   }
 
-  findAll(hostId: string): Promise<DraftListing[]> {
+  findAll(hostId: string): Promise<PrismaDraftListing[]> {
     return this.prisma.draftListing.findMany({
       where: { hostId },
       orderBy: { updatedAt: 'desc' },
     });
   }
 
-  async find(hostId: string, id: string): Promise<DraftListing> {
+  async find(hostId: string, id: string): Promise<PrismaDraftListing> {
     const draft = await this.prisma.draftListing.findFirst({
       where: { id, hostId },
     });
@@ -132,12 +133,18 @@ export class DraftListingsService {
   }
 
   /**
-   * Maps a DraftListing to a Listing creation object. We can safely assume
+   * Maps a PrismaDraftListing to a Listing creation object. We can safely assume
    * that the draft is complete if we called `assertDraftIsComplete` before.
    * @param draft The draft listing to map
    */
   private mapDraftToListing(draft: DraftListing) {
-    const location = parseLocationFromDBToResponse(draft.location);
+    const location = parseLocationFromDBToResponse(
+      draft.location,
+      draft.location.country,
+      draft.location.city,
+      draft.location.lat,
+      draft.location.lng,
+    );
     const promotions = parsePromotionsFromDBToResponse(draft.promotions);
     return {
       host: {

@@ -1,18 +1,18 @@
 import {
   DraftListingStructure,
   GuestLimits,
-  ListingLocation,
+  ListingLocationResponse,
   PrivacyType,
   Promotion,
   PropertyType,
-} from 'src/listings/dto/listing.types';
+} from '@src/listings/types/listing.types';
 
 export class DraftListingResponseDto {
   id: string;
   hostId: string;
   propertyType: PropertyType;
   privacyType: PrivacyType;
-  location: ListingLocation;
+  location: ListingLocationResponse;
   checkInTime: string;
   checkOutTime: string;
   title: string;

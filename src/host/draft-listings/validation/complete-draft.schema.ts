@@ -1,4 +1,4 @@
-import { privacyTypes, propertyTypes } from '@src/listings/dto/listing.types';
+import { privacyTypes, propertyTypes } from '@src/listings/types/listing.types';
 import { z } from 'zod';
 
 export const completeDraftListingSchema = z.object({
