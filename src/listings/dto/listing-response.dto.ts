@@ -6,7 +6,7 @@ import {
   Reservation,
   Review,
 } from '@prisma/client';
-import { ListingLocation, Promotion } from '../types/listing.types';
+import { ListingLocationResponse, Promotion } from '../types/listing.types';
 
 export class ListingResponseDto {
   id: string;
@@ -17,7 +17,7 @@ export class ListingResponseDto {
   propertyType: PropertyType;
   privacyType: PrivacyType;
 
-  location: ListingLocation;
+  location: ListingLocationResponse;
 
   images: string[];
   promotions: Promotion[];

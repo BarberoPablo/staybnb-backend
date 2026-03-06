@@ -13,6 +13,7 @@ import {
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
 import { DraftListing } from './dto/draft-listing.types';
+import { sanitizeDraftListing } from './mappers/draft-listings.mappers';
 import { validateDraftForCompletion } from './validation/validate-complete-draft';
 
 @Injectable()
@@ -35,24 +36,25 @@ export class DraftListingsService {
     }
 
     validateDraftForCompletion(draft);
+    const verifiedDraft = sanitizeDraftListing(draft);
 
     try {
       return await this.prisma.$transaction(async (tx) => {
         const listing = await tx.listing.create({
-          data: this.mapDraftToListing(draft),
+          data: this.mapDraftToListing(verifiedDraft),
         });
 
-        if (draft.amenities?.length) {
+        if (verifiedDraft.amenities?.length) {
           const count = await tx.amenity.count({
-            where: { id: { in: draft.amenities } },
+            where: { id: { in: verifiedDraft.amenities } },
           });
 
-          if (count !== draft.amenities.length) {
+          if (count !== verifiedDraft.amenities.length) {
             throw new BadRequestException('Invalid amenities');
           }
 
           await tx.listingAmenity.createMany({
-            data: draft.amenities.map((amenityId) => ({
+            data: verifiedDraft.amenities.map((amenityId) => ({
               listingId: listing.id,
               amenityId,
             })),
@@ -60,7 +62,7 @@ export class DraftListingsService {
         }
 
         await tx.draftListing.delete({
-          where: { id: draft.id },
+          where: { id: verifiedDraft.id },
         });
 
         return { listingId: listing.id };
@@ -134,7 +136,7 @@ export class DraftListingsService {
 
   /**
    * Maps a PrismaDraftListing to a Listing creation object. We can safely assume
-   * that the draft is complete if we called `assertDraftIsComplete` before.
+   * that the draft is complete if we called `validateDraftForCompletion` before.
    * @param draft The draft listing to map
    */
   private mapDraftToListing(draft: DraftListing) {

@@ -39,7 +39,7 @@ export class ListingRepository {
       skip: options.skip,
     });
 
-    return listings.map((listing) => this.mapListing(listing));
+    return listings.map((listing) => this.sanitizeListing(listing));
   }
 
   async findPopular(
@@ -81,7 +81,7 @@ export class ListingRepository {
       skip: options.skip,
     });
 
-    return listings.map((listing) => this.mapListing(listing));
+    return listings.map((listing) => this.sanitizeListing(listing));
   }
 
   async search(
@@ -107,7 +107,7 @@ export class ListingRepository {
       skip: options.skip,
     });
 
-    return listings.map((listing) => this.mapListing(listing));
+    return listings.map((listing) => this.sanitizeListing(listing));
   }
 
   async findById(
@@ -151,10 +151,10 @@ export class ListingRepository {
       include,
     });
 
-    return this.mapListing(listing);
+    return this.sanitizeListing(listing);
   }
 
-  private mapListing(
+  private sanitizeListing(
     listing: Prisma.ListingGetPayload<any>,
   ): ListingWithOptionalRelations {
     assertListingLocation(listing.location);

@@ -95,7 +95,7 @@ export function assertListingLocation(
   location: unknown,
 ): asserts location is ListingLocation {
   if (!location || typeof location !== 'object')
-    throw new Error('Listing location invariant violated');
+    throw new Error('Invalid listing location shape');
 
   const loc = location as Record<string, unknown>;
 
@@ -109,5 +109,5 @@ export function assertListingLocation(
       typeof loc.timezone === 'string'
     )
   )
-    throw new Error('Listing location invariant violated');
+    throw new Error('Invalid listing location shape');
 }
