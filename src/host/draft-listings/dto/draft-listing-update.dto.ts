@@ -1,11 +1,11 @@
 import { PrivacyType, PropertyType } from '@prisma/client';
-import { IsInt, IsObject, Min } from 'class-validator';
 import {
   DraftListingStructure,
   GuestLimits,
   ListingLocation,
   Promotion,
-} from 'src/listings/dto/listing.types';
+} from '@src/listings/types/listing.types';
+import { IsInt, IsObject, Min } from 'class-validator';
 
 //Domain dto
 export class UpdateDraftListingDto {

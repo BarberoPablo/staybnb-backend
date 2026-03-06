@@ -1,5 +1,5 @@
 import { Listing } from '@prisma/client';
-import { Guests, Promotion } from '../dto/listing.types';
+import { Guests, Promotion } from '../types/listing.types';
 
 export function getTotalGuests(guests: Record<Guests, number>) {
   return Object.values(guests).reduce((total, count) => total + count, 0);
@@ -38,3 +38,12 @@ export const ALLOWED_SINGLE_LISTING_INCLUDES = new Set([
   'reviews',
   '_count',
 ]);
+
+export function buildSearchInclude(include?: string): string[] {
+  return include
+    ? include
+        .split(',')
+        .map((value) => value.trim())
+        .filter((value) => !!value)
+    : [];
+}

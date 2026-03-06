@@ -2,13 +2,20 @@ import {
   parseLocationFromDBToResponse,
   parsePromotionsFromDBToResponse,
 } from '@src/host/draft-listings/draft-listings.mapper';
-import { ListingResponseDto } from './listing-response.dto';
-import { ListingWithOptionalRelations } from './listing.types';
+import { ListingResponseDto } from '../dto/listing-response.dto';
+import { ListingWithOptionalRelations } from '../types/listing.types';
+import { ListingLocation } from '../types/listing.types';
 
 export function mapListingToResponse(
   listing: ListingWithOptionalRelations,
 ): ListingResponseDto {
-  const location = parseLocationFromDBToResponse(listing.location);
+  const location = parseLocationFromDBToResponse(
+    listing.location,
+    listing.country,
+    listing.city,
+    listing.lat,
+    listing.lng,
+  );
   const promotions = parsePromotionsFromDBToResponse(listing.promotions);
 
   const response: ListingResponseDto = {
@@ -79,4 +86,28 @@ export function mapListingToResponse(
   }
 
   return response;
+}
+
+/**
+ * Runtime type guard (REAL validation, not a cast)
+ */
+export function assertListingLocation(
+  location: unknown,
+): asserts location is ListingLocation {
+  if (!location || typeof location !== 'object')
+    throw new Error('Invalid listing location shape');
+
+  const loc = location as Record<string, unknown>;
+
+  if (
+    !(
+      typeof loc.formatted === 'string' &&
+      typeof loc.housenumber === 'string' &&
+      typeof loc.street === 'string' &&
+      typeof loc.state === 'string' &&
+      typeof loc.postcode === 'string' &&
+      typeof loc.timezone === 'string'
+    )
+  )
+    throw new Error('Invalid listing location shape');
 }

@@ -1,18 +1,22 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
-import { ListingWithOptionalRelations } from '@src/listings/dto/listing.types';
-import { PrismaService } from '@src/prisma/prisma.service';
+import { ListingWithOptionalRelations } from '@src/listings/types/listing.types';
 import { buildListingsWhere } from './builders/build-listings-where';
+import {
+  FindListingByIdOptions,
+  SearchListingsOptions,
+} from './repositories/listing.repository.types';
+import { ListingRepository } from './repositories/listings.repository';
 import {
   ALLOWED_SEARCH_INCLUDES,
   ALLOWED_SINGLE_LISTING_INCLUDES,
+  buildSearchInclude,
 } from './utils/listings.utils';
 
 @Injectable()
 export class ListingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly listingRepository: ListingRepository) {}
 
   async getFeaturedListings(
     query: GetFeaturedListingsQueryDto,
@@ -20,29 +24,10 @@ export class ListingsService {
     const limit = query.limit ?? 12;
     const offset = query.offset ?? 0;
 
-    const listings = await this.prisma.listing.findMany({
-      where: {
-        status: ListingStatus.PUBLISHED,
-        ratingAvg: {
-          gte: 4,
-        },
-      },
-      orderBy: [
-        {
-          ratingAvg: 'desc',
-        },
-        {
-          ratingCount: 'desc',
-        },
-        {
-          createdAt: 'desc',
-        },
-      ],
+    return this.listingRepository.findFeatured({
       take: limit,
       skip: offset,
     });
-
-    return listings;
   }
 
   async getPopularListings(
@@ -51,43 +36,10 @@ export class ListingsService {
     const limit = query.limit ?? 12;
     const offset = query.offset ?? 0;
 
-    const now = new Date();
-    const lastMonth = new Date(now);
-    lastMonth.setDate(now.getDate() - 30);
-
-    const listings = await this.prisma.listing.findMany({
-      where: {
-        status: ListingStatus.PUBLISHED,
-      },
-      include: {
-        _count: {
-          select: {
-            reservations: {
-              where: {
-                createdAt: {
-                  gte: lastMonth,
-                },
-              },
-            },
-            favorites: true,
-          },
-        },
-      },
-      orderBy: [
-        {
-          reservations: {
-            _count: 'desc',
-          },
-        },
-        {
-          createdAt: 'desc',
-        },
-      ],
+    return this.listingRepository.findPopular({
       take: limit,
       skip: offset,
     });
-
-    return listings;
   }
 
   async search(
@@ -98,15 +50,17 @@ export class ListingsService {
 
     const where = buildListingsWhere(query);
 
-    const include: Prisma.ListingInclude = {};
+    const includeParams = buildSearchInclude(query.include);
 
-    const includeParams = query.include
-      ? query.include.split(',').map((value) => value.trim())
-      : [];
+    const options: SearchListingsOptions = {
+      where,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+      take: limit,
+      skip: offset,
+    };
 
     for (const includeParam of includeParams) {
-      if (!includeParam) continue;
-
       if (!ALLOWED_SEARCH_INCLUDES.has(includeParam)) {
         throw new BadRequestException(
           `Include '${includeParam}' is not allowed in GET /listings search endpoint`,
@@ -114,49 +68,31 @@ export class ListingsService {
       }
 
       if (includeParam === 'host') {
-        include.host = true;
+        options.includeHost = true;
       }
 
       if (includeParam === 'amenities') {
-        include.amenities = true;
+        options.includeAmenities = true;
       }
 
       if (includeParam === '_count') {
-        include._count = true;
+        options.includeCount = true;
       }
     }
 
-    const orderBy: Prisma.ListingOrderByWithRelationInput = query.sortBy
-      ? { [query.sortBy]: query.sortOrder ?? 'desc' }
-      : { createdAt: 'desc' };
-
-    const listings = await this.prisma.listing.findMany({
-      where,
-      include,
-      orderBy,
-      take: limit,
-      skip: offset,
-    });
-
-    return listings;
+    return this.listingRepository.search(options);
   }
 
   async findById(
     id: string,
     query: GetListingsQueryDto,
   ): Promise<ListingWithOptionalRelations> {
-    const include: Prisma.ListingInclude = {};
+    const includeParams = buildSearchInclude(query.include);
 
-    const includeParams = query.include
-      ? query.include.split(',').map((value) => value.trim())
-      : [];
-
-    let includeReservations = false;
+    const options: FindListingByIdOptions = {};
 
     for (const includeParam of includeParams) {
-      if (!includeParam) {
-        continue;
-      }
+      if (!includeParam) continue;
 
       if (!ALLOWED_SINGLE_LISTING_INCLUDES.has(includeParam)) {
         throw new BadRequestException(
@@ -164,57 +100,13 @@ export class ListingsService {
         );
       }
 
-      if (includeParam === 'host') {
-        include.host = true;
-      }
-
-      if (includeParam === 'amenities') {
-        include.amenities = true;
-      }
-
-      if (includeParam === 'reservations') {
-        includeReservations = true;
-
-        include.reservations = {
-          where: {
-            status: ReservationStatus.UPCOMING,
-            endDate: {
-              gte: new Date(),
-            },
-          },
-          orderBy: {
-            startDate: 'asc',
-          },
-        };
-      }
-
-      if (includeParam === 'reviews') {
-        include.reviews = true;
-      }
-
-      if (includeParam === '_count') {
-        include._count = {
-          select: {
-            reservations: includeReservations
-              ? {
-                  where: {
-                    status: ReservationStatus.UPCOMING,
-                    endDate: {
-                      gte: new Date(),
-                    },
-                  },
-                }
-              : true,
-          },
-        };
-      }
+      if (includeParam === 'host') options.includeHost = true;
+      if (includeParam === 'amenities') options.includeAmenities = true;
+      if (includeParam === 'reservations') options.includeReservations = true;
+      if (includeParam === 'reviews') options.includeReviews = true;
+      if (includeParam === '_count') options.includeCount = true;
     }
 
-    const listing = await this.prisma.listing.findUniqueOrThrow({
-      where: { id },
-      include,
-    });
-
-    return listing;
+    return this.listingRepository.findById(id, options);
   }
 }

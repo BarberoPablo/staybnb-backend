@@ -6,20 +6,16 @@ import type {
   Review,
 } from '@prisma/client';
 
-export type DraftListingLocation = {
-  country: string;
-  city: string;
-  lat: number;
-  lng: number;
-  state: string;
-  street: string;
-  postcode: string;
-  timezone: string;
+export type ListingLocation = {
   formatted: string;
   housenumber: string;
+  street: string;
+  state: string;
+  postcode: string;
+  timezone: string;
 };
 
-export type ListingLocation = {
+export type ListingLocationResponse = {
   country: string;
   city: string;
   lat: number;
@@ -61,7 +57,8 @@ export type GuestLimits = {
 export const guests = ['adults', 'children', 'infant', 'pets'] as const;
 export type Guests = (typeof guests)[number];
 
-export type ListingWithOptionalRelations = Listing & {
+export type ListingWithOptionalRelations = Omit<Listing, 'location'> & {
+  location: ListingLocation;
   amenities?: ListingAmenity[];
   host?: Profile;
   reservations?: Reservation[];

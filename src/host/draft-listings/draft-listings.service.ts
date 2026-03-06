@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DraftListing, Prisma } from '@prisma/client';
+import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { completedDraftListingTemplate } from './draft-listing.utils';
 import {
@@ -12,13 +12,15 @@ import {
 } from './draft-listings.mapper';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
+import { DraftListing } from './dto/draft-listing.types';
+import { sanitizeDraftListing } from './mappers/draft-listings.mappers';
 import { validateDraftForCompletion } from './validation/validate-complete-draft';
 
 @Injectable()
 export class DraftListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(hostId: string): Promise<DraftListing> {
+  create(hostId: string): Promise<PrismaDraftListing> {
     return this.prisma.draftListing.create({
       data: { hostId },
     });
@@ -34,24 +36,25 @@ export class DraftListingsService {
     }
 
     validateDraftForCompletion(draft);
+    const verifiedDraft = sanitizeDraftListing(draft);
 
     try {
       return await this.prisma.$transaction(async (tx) => {
         const listing = await tx.listing.create({
-          data: this.mapDraftToListing(draft),
+          data: this.mapDraftToListing(verifiedDraft),
         });
 
-        if (draft.amenities?.length) {
+        if (verifiedDraft.amenities?.length) {
           const count = await tx.amenity.count({
-            where: { id: { in: draft.amenities } },
+            where: { id: { in: verifiedDraft.amenities } },
           });
 
-          if (count !== draft.amenities.length) {
+          if (count !== verifiedDraft.amenities.length) {
             throw new BadRequestException('Invalid amenities');
           }
 
           await tx.listingAmenity.createMany({
-            data: draft.amenities.map((amenityId) => ({
+            data: verifiedDraft.amenities.map((amenityId) => ({
               listingId: listing.id,
               amenityId,
             })),
@@ -59,7 +62,7 @@ export class DraftListingsService {
         }
 
         await tx.draftListing.delete({
-          where: { id: draft.id },
+          where: { id: verifiedDraft.id },
         });
 
         return { listingId: listing.id };
@@ -75,14 +78,14 @@ export class DraftListingsService {
     }
   }
 
-  findAll(hostId: string): Promise<DraftListing[]> {
+  findAll(hostId: string): Promise<PrismaDraftListing[]> {
     return this.prisma.draftListing.findMany({
       where: { hostId },
       orderBy: { updatedAt: 'desc' },
     });
   }
 
-  async find(hostId: string, id: string): Promise<DraftListing> {
+  async find(hostId: string, id: string): Promise<PrismaDraftListing> {
     const draft = await this.prisma.draftListing.findFirst({
       where: { id, hostId },
     });
@@ -132,12 +135,18 @@ export class DraftListingsService {
   }
 
   /**
-   * Maps a DraftListing to a Listing creation object. We can safely assume
-   * that the draft is complete if we called `assertDraftIsComplete` before.
+   * Maps a PrismaDraftListing to a Listing creation object. We can safely assume
+   * that the draft is complete if we called `validateDraftForCompletion` before.
    * @param draft The draft listing to map
    */
   private mapDraftToListing(draft: DraftListing) {
-    const location = parseLocationFromDBToResponse(draft.location);
+    const location = parseLocationFromDBToResponse(
+      draft.location,
+      draft.location.country,
+      draft.location.city,
+      draft.location.lat,
+      draft.location.lng,
+    );
     const promotions = parsePromotionsFromDBToResponse(draft.promotions);
     return {
       host: {

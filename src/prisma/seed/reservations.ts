@@ -4,7 +4,7 @@ import {
   Guests,
   ListingLocation,
   Promotion,
-} from '@src/listings/dto/listing.types';
+} from '@src/listings/types/listing.types';
 import { fromZonedTime } from 'date-fns-tz';
 import 'dotenv/config';
 import { createPrismaClient } from './prisma.factory';
