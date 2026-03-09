@@ -9,10 +9,10 @@ import {
 } from '@nestjs/common';
 import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
-import { mapDraftListingDbToResponse } from './draft-listings.mapper';
 import { DraftListingsService } from './draft-listings.service';
 import { DraftListingResponseDto } from './dto/draft-listing-response.dto';
 import { PatchDraftListingBodyDto } from './dto/draft-listing-update.dto';
+import { mapDraftListingDbToResponse } from './mappers/draft-listings.mappers';
 
 @Controller('host/draft-listings')
 export class DraftListingsController {

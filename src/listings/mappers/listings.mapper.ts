@@ -1,10 +1,12 @@
 import {
   parseLocationFromDBToResponse,
   parsePromotionsFromDBToResponse,
-} from '@src/host/draft-listings/draft-listings.mapper';
+} from '@src/host/draft-listings/mappers/draft-listings.mappers';
 import { ListingResponseDto } from '../dto/listing-response.dto';
-import { ListingWithOptionalRelations } from '../types/listing.types';
-import { ListingLocation } from '../types/listing.types';
+import {
+  ListingLocation,
+  ListingWithOptionalRelations,
+} from '../types/listing.types';
 
 export function mapListingToResponse(
   listing: ListingWithOptionalRelations,

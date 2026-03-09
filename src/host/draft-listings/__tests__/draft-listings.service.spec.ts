@@ -1,30 +1,45 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { DraftListing } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
+import { DraftListingsRepository } from '../draft-listings.repository';
 import { DraftListingsService } from '../draft-listings.service';
+import { DraftListing } from '../dto/draft-listing.types';
+import * as mappers from '../mappers/draft-listings.mappers';
+import * as validation from '../validation/validate-complete-draft';
 
 describe('DraftListingsService', () => {
   let service: DraftListingsService;
   let prisma: PrismaService;
+  let repository: DraftListingsRepository;
 
   const mockDraftListing: DraftListing = {
     id: 'draft123',
     hostId: 'host123',
-    amenities: [],
-    title: '',
-    description: '',
+    amenities: ['amenity1'],
+    title: 'Title',
+    description: 'Description',
     nightPrice: 40,
-    images: [],
-    beds: 0,
-    bedrooms: 0,
-    bathrooms: 0,
+    images: ['img1', 'img2', 'img3'],
+    beds: 1,
+    bedrooms: 1,
+    bathrooms: 1,
     maxGuests: 2,
     maxAdults: 2,
     maxChildren: 0,
     maxInfants: 0,
     maxPets: 0,
-    location: {},
+    location: {
+      country: 'Country',
+      city: 'City',
+      lat: 0,
+      lng: 0,
+      formatted: 'Formatted',
+      housenumber: '1',
+      street: 'Street',
+      state: 'State',
+      postcode: '12345',
+      timezone: 'UTC',
+    },
     promotions: [],
     checkInTime: '15:00',
     checkOutTime: '11:00',
@@ -47,7 +62,19 @@ describe('DraftListingsService', () => {
             draftListing: {
               findFirst: jest.fn(),
               delete: jest.fn(),
+              create: jest.fn(),
+              update: jest.fn(),
             },
+            amenity: {
+              count: jest.fn(),
+            },
+          },
+        },
+        {
+          provide: DraftListingsRepository,
+          useValue: {
+            findDraftOrThrow: jest.fn(),
+            publishDraft: jest.fn(),
           },
         },
       ],
@@ -55,10 +82,58 @@ describe('DraftListingsService', () => {
 
     service = module.get<DraftListingsService>(DraftListingsService);
     prisma = module.get<PrismaService>(PrismaService);
+    repository = module.get<DraftListingsRepository>(DraftListingsRepository);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('complete', () => {
+    const hostId = 'host123';
+    const draftId = 'draft123';
+
+    it('should complete the draft if valid', async () => {
+      jest
+        .spyOn(repository, 'findDraftOrThrow')
+        .mockResolvedValue(mockDraftListing);
+      jest
+        .spyOn(validation, 'validateDraftForCompletion')
+        .mockReturnValue({} as any);
+      jest
+        .spyOn(mappers, 'sanitizeDraftListing')
+        .mockReturnValue(mockDraftListing as any);
+      jest.spyOn(prisma.amenity, 'count').mockResolvedValue(1);
+      jest
+        .spyOn(repository, 'publishDraft')
+        .mockResolvedValue({ listingId: 'listing123' });
+
+      const result = await service.complete(hostId, draftId);
+
+      expect(repository.findDraftOrThrow).toHaveBeenCalledWith(hostId, draftId);
+      expect(prisma.amenity.count).toHaveBeenCalledWith({
+        where: { id: { in: ['amenity1'] } },
+      });
+      expect(repository.publishDraft).toHaveBeenCalled();
+      expect(result).toEqual({ listingId: 'listing123' });
+    });
+
+    it('should throw BadRequestException if amenities are invalid', async () => {
+      jest
+        .spyOn(repository, 'findDraftOrThrow')
+        .mockResolvedValue(mockDraftListing);
+      jest
+        .spyOn(validation, 'validateDraftForCompletion')
+        .mockReturnValue({} as any);
+      jest
+        .spyOn(mappers, 'sanitizeDraftListing')
+        .mockReturnValue(mockDraftListing as any);
+      jest.spyOn(prisma.amenity, 'count').mockResolvedValue(0);
+
+      await expect(service.complete(hostId, draftId)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
   });
 
   describe('remove', () => {
