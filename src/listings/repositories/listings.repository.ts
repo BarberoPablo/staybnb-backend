@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
+import { FeaturedListingDto } from '../dto/featured-listing.dto';
+import {
+  assertListingLocation,
+  mapToFeaturedListingDto,
+} from '../mappers/listings.mapper';
 import { ListingWithOptionalRelations } from '../types/listing.types';
 import {
-  FindListingByIdOptions,
   FeaturedListingsOptions,
+  FindListingByIdOptions,
   PopularListingsOptions,
   SearchListingsOptions,
 } from './listing.repository.types';
-import { assertListingLocation } from '../mappers/listings.mapper';
 
 @Injectable()
 export class ListingRepository {
@@ -16,7 +20,7 @@ export class ListingRepository {
 
   async findFeatured(
     options: FeaturedListingsOptions,
-  ): Promise<ListingWithOptionalRelations[]> {
+  ): Promise<FeaturedListingDto[]> {
     const listings = await this.prisma.listing.findMany({
       where: {
         status: ListingStatus.PUBLISHED,
@@ -24,22 +28,26 @@ export class ListingRepository {
           gte: 4,
         },
       },
+      select: {
+        id: true,
+        title: true,
+        nightPrice: true,
+        images: true,
+        ratingAvg: true,
+        propertyType: true,
+        privacyType: true,
+        location: true,
+      },
       orderBy: [
-        {
-          ratingAvg: 'desc',
-        },
-        {
-          ratingCount: 'desc',
-        },
-        {
-          createdAt: 'desc',
-        },
+        { ratingAvg: 'desc' },
+        { ratingCount: 'desc' },
+        { createdAt: 'desc' },
       ],
       take: options.take,
       skip: options.skip,
     });
 
-    return listings.map((listing) => this.sanitizeListing(listing));
+    return listings.map(mapToFeaturedListingDto);
   }
 
   async findPopular(

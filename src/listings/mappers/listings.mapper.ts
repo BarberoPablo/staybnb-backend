@@ -2,10 +2,13 @@ import {
   parseLocationFromDBToResponse,
   parsePromotionsFromDBToResponse,
 } from '@src/host/draft-listings/mappers/draft-listings.mappers';
+import { FeaturedListingDto } from '../dto/featured-listing.dto';
 import { ListingResponseDto } from '../dto/listing-response.dto';
 import {
+  FeaturedListingLocation,
   ListingLocation,
   ListingWithOptionalRelations,
+  PrismaFeaturedListing,
 } from '../types/listing.types';
 
 export function mapListingToResponse(
@@ -112,4 +115,25 @@ export function assertListingLocation(
     )
   )
     throw new Error('Invalid listing location shape');
+}
+
+export function mapToFeaturedListingDto(
+  listing: PrismaFeaturedListing,
+): FeaturedListingDto {
+  const location = listing.location as FeaturedListingLocation;
+
+  return {
+    id: listing.id,
+    title: listing.title,
+    nightPrice: listing.nightPrice,
+    images: listing.images,
+    ratingAvg: listing.ratingAvg,
+    propertyType: listing.propertyType,
+    privacyType: listing.privacyType,
+    location: {
+      city: location.city,
+      state: location.state,
+      country: location.country,
+    },
+  };
 }

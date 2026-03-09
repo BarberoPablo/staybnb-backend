@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
+import { GetCitiesQueryDto } from './dto/get-cities-query.dto';
 import { PopularDestinationResponseDto } from './dto/popular-destination-response.dto';
 
 @Injectable()
@@ -8,10 +8,10 @@ export class CitiesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getPopularCities(
-    query: GetFeaturedListingsQueryDto,
+    query: GetCitiesQueryDto,
   ): Promise<PopularDestinationResponseDto[]> {
-    const limit = query.limit ?? 12;
-    const offset = query.offset ?? 0;
+    const limit = query.limit;
+    const offset = query.offset;
 
     const result = await this.prisma.$queryRaw<PopularDestinationResponseDto[]>`
       SELECT 

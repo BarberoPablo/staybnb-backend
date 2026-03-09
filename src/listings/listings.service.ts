@@ -3,6 +3,7 @@ import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-list
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingWithOptionalRelations } from '@src/listings/types/listing.types';
 import { buildListingsWhere } from './builders/build-listings-where';
+import { FeaturedListingDto } from './dto/featured-listing.dto';
 import {
   FindListingByIdOptions,
   SearchListingsOptions,
@@ -20,9 +21,9 @@ export class ListingsService {
 
   async getFeaturedListings(
     query: GetFeaturedListingsQueryDto,
-  ): Promise<ListingWithOptionalRelations[]> {
-    const limit = query.limit ?? 12;
-    const offset = query.offset ?? 0;
+  ): Promise<FeaturedListingDto[]> {
+    const limit = query.limit;
+    const offset = query.offset;
 
     return this.listingRepository.findFeatured({
       take: limit,
@@ -33,8 +34,8 @@ export class ListingsService {
   async getPopularListings(
     query: GetFeaturedListingsQueryDto,
   ): Promise<ListingWithOptionalRelations[]> {
-    const limit = query.limit ?? 12;
-    const offset = query.offset ?? 0;
+    const limit = query.limit;
+    const offset = query.offset;
 
     return this.listingRepository.findPopular({
       take: limit,
@@ -45,8 +46,8 @@ export class ListingsService {
   async search(
     query: GetListingsQueryDto,
   ): Promise<ListingWithOptionalRelations[]> {
-    const limit = query.limit ?? 20;
-    const offset = query.offset ?? 0;
+    const limit = query.limit;
+    const offset = query.offset;
 
     const where = buildListingsWhere(query);
 
