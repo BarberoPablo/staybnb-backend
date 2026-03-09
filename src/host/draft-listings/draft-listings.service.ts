@@ -4,11 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DraftListing as PrismaDraftListing } from '@prisma/client';
+import { AmenitiesRepository } from '@src/amenities/repositories/amenities.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { completedDraftListingTemplate } from './draft-listing.utils';
-import { DraftListingsRepository } from './repositories/draft-listings.repository';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
+import { DraftListingsRepository } from './repositories/draft-listings.repository';
 import { validateDraftForCompletion } from './validation/validate-complete-draft';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class DraftListingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly draftListingsRepository: DraftListingsRepository,
+    private readonly amenitiesRepository: AmenitiesRepository,
   ) {}
 
   create(hostId: string): Promise<PrismaDraftListing> {
@@ -36,9 +38,7 @@ export class DraftListingsService {
     validateDraftForCompletion(draft);
 
     if (draft.amenities?.length) {
-      const count = await this.prisma.amenity.count({
-        where: { id: { in: draft.amenities } },
-      });
+      const count = await this.amenitiesRepository.countByIds(draft.amenities);
 
       if (count !== draft.amenities.length) {
         throw new BadRequestException('Invalid amenities');
