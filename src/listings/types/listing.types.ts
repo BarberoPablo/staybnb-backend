@@ -1,6 +1,7 @@
-import type {
+import {
   Listing,
   ListingAmenity,
+  Prisma,
   Profile,
   Reservation,
   Review,
@@ -58,7 +59,7 @@ export const guests = ['adults', 'children', 'infant', 'pets'] as const;
 export type Guests = (typeof guests)[number];
 
 export type ListingWithOptionalRelations = Omit<Listing, 'location'> & {
-  location: ListingLocation;
+  location: Prisma.JsonValue;
   amenities?: ListingAmenity[];
   host?: Profile;
   reservations?: Reservation[];
