@@ -71,19 +71,17 @@ export type ListingWithOptionalRelations = Omit<Listing, 'location'> & {
 };
 
 export type PrismaFeaturedListing = Prisma.ListingGetPayload<{
-  select: typeof featuredListingSelect;
+  select: Prisma.ListingSelect & {
+    id: true;
+    title: true;
+    nightPrice: true;
+    images: true;
+    ratingAvg: true;
+    propertyType: true;
+    privacyType: true;
+    location: true;
+  };
 }>;
-
-const featuredListingSelect = Prisma.validator<Prisma.ListingSelect>()({
-  id: true,
-  title: true,
-  nightPrice: true,
-  images: true,
-  ratingAvg: true,
-  propertyType: true,
-  privacyType: true,
-  location: true,
-});
 
 export type FeaturedListingLocation = {
   city: string;
