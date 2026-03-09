@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DraftListing as PrismaDraftListing } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { DraftListing } from './dto/draft-listing.types';
+import { DraftListing } from '../dto/draft-listing.types';
 import {
   mapDraftToListing,
   sanitizeDraftListing,
-} from './mappers/draft-listings.mappers';
+} from '../mappers/draft-listings.mappers';
 
 @Injectable()
 export class DraftListingsRepository {
