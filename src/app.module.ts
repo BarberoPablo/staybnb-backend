@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import * as Joi from 'joi';
 import { AdminListingsModule } from './admin/listings/admin-listings.module';
+import { AmenitiesModule } from './amenities/amenities.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { CitiesModule } from './cities/cities.module';
@@ -39,6 +40,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     ReservationsModule,
     EmailModule,
     CitiesModule,
+    AmenitiesModule,
   ],
   providers: [
     {
