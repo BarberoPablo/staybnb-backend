@@ -6,14 +6,14 @@ export class GetListingsQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
-  offset?: number;
+  offset = 0;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number;
+  limit = 20;
 
   @IsOptional()
   @IsString()
