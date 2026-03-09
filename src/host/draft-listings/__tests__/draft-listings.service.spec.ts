@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { DraftListingsRepository } from '../draft-listings.repository';
+import { DraftListingsRepository } from '../repositories/draft-listings.repository';
 import { DraftListingsService } from '../draft-listings.service';
 import { DraftListing } from '../dto/draft-listing.types';
 import * as mappers from '../mappers/draft-listings.mappers';

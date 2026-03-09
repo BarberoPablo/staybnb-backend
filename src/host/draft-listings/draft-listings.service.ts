@@ -6,7 +6,7 @@ import {
 import { DraftListing as PrismaDraftListing } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { completedDraftListingTemplate } from './draft-listing.utils';
-import { DraftListingsRepository } from './draft-listings.repository';
+import { DraftListingsRepository } from './repositories/draft-listings.repository';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
 import { validateDraftForCompletion } from './validation/validate-complete-draft';
