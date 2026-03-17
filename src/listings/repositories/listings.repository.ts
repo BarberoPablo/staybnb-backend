@@ -25,7 +25,7 @@ export class ListingRepository {
       where: {
         status: ListingStatus.PUBLISHED,
         ratingAvg: {
-          gte: 4,
+          gte: 4.1,
         },
       },
       select: {
