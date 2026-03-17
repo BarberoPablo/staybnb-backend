@@ -1,11 +1,11 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { DraftListingsRepository } from '../repositories/draft-listings.repository';
-import { DraftListingsService } from '../draft-listings.service';
-import { DraftListing } from '../dto/draft-listing.types';
-import * as mappers from '../mappers/draft-listings.mappers';
-import * as validation from '../validation/validate-complete-draft';
+import { DraftListingsRepository } from '@src/host/draft-listings/repositories/draft-listings.repository';
+import { DraftListingsService } from '@src/host/draft-listings/draft-listings.service';
+import { DraftListing } from '@src/host/draft-listings/dto/draft-listing.types';
+import * as mappers from '@src/host/draft-listings/mappers/draft-listings.mappers';
+import * as validation from '@src/host/draft-listings/validation/validate-complete-draft';
 
 describe('DraftListingsService', () => {
   let service: DraftListingsService;
@@ -94,27 +94,33 @@ describe('DraftListingsService', () => {
     const draftId = 'draft123';
 
     it('should complete the draft if valid', async () => {
-      jest
+      const findDraftOrThrowSpy = jest
         .spyOn(repository, 'findDraftOrThrow')
         .mockResolvedValue(mockDraftListing);
       jest
         .spyOn(validation, 'validateDraftForCompletion')
-        .mockReturnValue({} as any);
+        .mockReturnValue(
+          mockDraftListing as unknown as ReturnType<
+            typeof validation.validateDraftForCompletion
+          >,
+        );
       jest
         .spyOn(mappers, 'sanitizeDraftListing')
-        .mockReturnValue(mockDraftListing as any);
-      jest.spyOn(prisma.amenity, 'count').mockResolvedValue(1);
-      jest
+        .mockReturnValue(mockDraftListing);
+      const amenityCountSpy = jest
+        .spyOn(prisma.amenity, 'count')
+        .mockResolvedValue(1);
+      const publishDraftSpy = jest
         .spyOn(repository, 'publishDraft')
         .mockResolvedValue({ listingId: 'listing123' });
 
       const result = await service.complete(hostId, draftId);
 
-      expect(repository.findDraftOrThrow).toHaveBeenCalledWith(hostId, draftId);
-      expect(prisma.amenity.count).toHaveBeenCalledWith({
+      expect(findDraftOrThrowSpy).toHaveBeenCalledWith(hostId, draftId);
+      expect(amenityCountSpy).toHaveBeenCalledWith({
         where: { id: { in: ['amenity1'] } },
       });
-      expect(repository.publishDraft).toHaveBeenCalled();
+      expect(publishDraftSpy).toHaveBeenCalled();
       expect(result).toEqual({ listingId: 'listing123' });
     });
 
@@ -124,10 +130,14 @@ describe('DraftListingsService', () => {
         .mockResolvedValue(mockDraftListing);
       jest
         .spyOn(validation, 'validateDraftForCompletion')
-        .mockReturnValue({} as any);
+        .mockReturnValue(
+          mockDraftListing as unknown as ReturnType<
+            typeof validation.validateDraftForCompletion
+          >,
+        );
       jest
         .spyOn(mappers, 'sanitizeDraftListing')
-        .mockReturnValue(mockDraftListing as any);
+        .mockReturnValue(mockDraftListing);
       jest.spyOn(prisma.amenity, 'count').mockResolvedValue(0);
 
       await expect(service.complete(hostId, draftId)).rejects.toThrow(

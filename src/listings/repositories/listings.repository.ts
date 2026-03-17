@@ -36,6 +36,8 @@ export class ListingRepository {
         ratingAvg: true,
         propertyType: true,
         privacyType: true,
+        city: true,
+        country: true,
         location: true,
       },
       orderBy: [
