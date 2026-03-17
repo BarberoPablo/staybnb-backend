@@ -15,16 +15,16 @@ export interface SearchListingsOptions {
   includeCount?: boolean;
   sortBy?: string;
   sortOrder?: Prisma.SortOrder;
-  take: number;
-  skip: number;
+  take?: number;
+  skip?: number;
 }
 
 export interface FeaturedListingsOptions {
-  take: number;
-  skip: number;
+  take?: number;
+  skip?: number;
 }
 
 export interface PopularListingsOptions {
-  take: number;
-  skip: number;
+  take?: number;
+  skip?: number;
 }

@@ -131,9 +131,9 @@ export function mapToFeaturedListingDto(
     propertyType: listing.propertyType,
     privacyType: listing.privacyType,
     location: {
-      city: location.city,
+      city: listing.city,
+      country: listing.country,
       state: location.state,
-      country: location.country,
     },
   };
 }

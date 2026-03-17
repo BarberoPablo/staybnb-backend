@@ -71,7 +71,7 @@ export type ListingWithOptionalRelations = Omit<Listing, 'location'> & {
 };
 
 export type PrismaFeaturedListing = Prisma.ListingGetPayload<{
-  select: Prisma.ListingSelect & {
+  select: {
     id: true;
     title: true;
     nightPrice: true;
@@ -79,6 +79,8 @@ export type PrismaFeaturedListing = Prisma.ListingGetPayload<{
     ratingAvg: true;
     propertyType: true;
     privacyType: true;
+    city: true;
+    country: true;
     location: true;
   };
 }>;
