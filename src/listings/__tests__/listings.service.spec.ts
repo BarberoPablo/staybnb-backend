@@ -4,7 +4,7 @@ import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-list
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingsService } from '@src/listings/listings.service';
 import { ListingRepository } from '@src/listings/repositories/listings.repository';
-import { FeaturedListingDto } from '../dto/featured-listing.dto';
+import { HomeListingDto } from '../dto/home-listing.dto';
 
 describe('ListingsService', () => {
   let service: ListingsService;
@@ -34,7 +34,7 @@ describe('ListingsService', () => {
 
   describe('getFeaturedListings', () => {
     it('should return the result from repository', async () => {
-      const mockResult = [{ id: '1' } as FeaturedListingDto];
+      const mockResult = [{ id: '1' } as HomeListingDto];
       const findFeaturedSpy = jest
         .spyOn(repository, 'findFeatured')
         .mockResolvedValue(mockResult);

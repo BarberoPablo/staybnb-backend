@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import type { PrivacyType, PropertyType } from '../types/listing.types';
 import { privacyTypes, propertyTypes } from '../types/listing.types';
 
-export class FeaturedListingLocationDto {
+export class HomeListingLocationDto {
   @ApiProperty()
   city: string;
 
@@ -13,7 +13,7 @@ export class FeaturedListingLocationDto {
   country: string;
 }
 
-export class FeaturedListingDto {
+export class HomeListingDto {
   @ApiProperty()
   id: string;
 
@@ -35,6 +35,6 @@ export class FeaturedListingDto {
   @ApiProperty({ enum: privacyTypes })
   privacyType: PrivacyType;
 
-  @ApiProperty({ type: FeaturedListingLocationDto })
-  location: FeaturedListingLocationDto;
+  @ApiProperty({ type: HomeListingLocationDto })
+  location: HomeListingLocationDto;
 }
