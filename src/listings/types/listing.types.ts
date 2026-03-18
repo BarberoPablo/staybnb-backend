@@ -85,7 +85,7 @@ export type PrismaFeaturedListing = Prisma.ListingGetPayload<{
   };
 }>;
 
-export type FeaturedListingLocation = {
+export type HomeListingLocation = {
   city: string;
   state: string;
   country: string;

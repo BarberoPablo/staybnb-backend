@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { FeaturedListingDto } from '../dto/featured-listing.dto';
+import { HomeListingDto } from '../dto/home-listing.dto';
 import {
   assertListingLocation,
-  mapToFeaturedListingDto,
+  mapToHomeListingDto,
 } from '../mappers/listings.mapper';
 import { ListingWithOptionalRelations } from '../types/listing.types';
 import {
@@ -20,7 +20,7 @@ export class ListingRepository {
 
   async findFeatured(
     options: FeaturedListingsOptions,
-  ): Promise<FeaturedListingDto[]> {
+  ): Promise<HomeListingDto[]> {
     const listings = await this.prisma.listing.findMany({
       where: {
         status: ListingStatus.PUBLISHED,
@@ -49,12 +49,12 @@ export class ListingRepository {
       skip: options.skip,
     });
 
-    return listings.map(mapToFeaturedListingDto);
+    return listings.map(mapToHomeListingDto);
   }
 
   async findPopular(
     options: PopularListingsOptions,
-  ): Promise<ListingWithOptionalRelations[]> {
+  ): Promise<HomeListingDto[]> {
     const now = new Date();
     const lastMonth = new Date(now);
     lastMonth.setDate(now.getDate() - 30);
@@ -63,19 +63,17 @@ export class ListingRepository {
       where: {
         status: ListingStatus.PUBLISHED,
       },
-      include: {
-        _count: {
-          select: {
-            reservations: {
-              where: {
-                createdAt: {
-                  gte: lastMonth,
-                },
-              },
-            },
-            favorites: true,
-          },
-        },
+      select: {
+        id: true,
+        title: true,
+        nightPrice: true,
+        images: true,
+        ratingAvg: true,
+        propertyType: true,
+        privacyType: true,
+        city: true,
+        country: true,
+        location: true,
       },
       orderBy: [
         {
@@ -91,7 +89,7 @@ export class ListingRepository {
       skip: options.skip,
     });
 
-    return listings.map((listing) => this.sanitizeListing(listing));
+    return listings.map(mapToHomeListingDto);
   }
 
   async search(
