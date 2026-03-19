@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { HomeListingDto } from '../dto/home-listing.dto';
+import { ListingCardDto } from '../dto/home-listing.dto';
 import {
   assertListingLocation,
   mapToHomeListingDto,
@@ -20,7 +20,7 @@ export class ListingRepository {
 
   async findFeatured(
     options: FeaturedListingsOptions,
-  ): Promise<HomeListingDto[]> {
+  ): Promise<ListingCardDto[]> {
     const listings = await this.prisma.listing.findMany({
       where: {
         status: ListingStatus.PUBLISHED,
@@ -54,7 +54,7 @@ export class ListingRepository {
 
   async findPopular(
     options: PopularListingsOptions,
-  ): Promise<HomeListingDto[]> {
+  ): Promise<ListingCardDto[]> {
     const now = new Date();
     const lastMonth = new Date(now);
     lastMonth.setDate(now.getDate() - 30);

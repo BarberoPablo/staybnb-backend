@@ -3,7 +3,7 @@ import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-list
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingWithOptionalRelations } from '@src/listings/types/listing.types';
 import { buildListingsWhere } from './builders/build-listings-where';
-import { HomeListingDto } from './dto/home-listing.dto';
+import { ListingCardDto } from './dto/home-listing.dto';
 import {
   FindListingByIdOptions,
   SearchListingsOptions,
@@ -21,7 +21,7 @@ export class ListingsService {
 
   async getFeaturedListings(
     query: GetFeaturedListingsQueryDto,
-  ): Promise<HomeListingDto[]> {
+  ): Promise<ListingCardDto[]> {
     const limit = query.limit;
     const offset = query.offset;
 
@@ -33,7 +33,7 @@ export class ListingsService {
 
   async getPopularListings(
     query: GetFeaturedListingsQueryDto,
-  ): Promise<HomeListingDto[]> {
+  ): Promise<ListingCardDto[]> {
     const limit = query.limit;
     const offset = query.offset;
 

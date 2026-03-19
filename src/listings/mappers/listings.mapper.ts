@@ -2,7 +2,7 @@ import {
   parseLocationFromDBToResponse,
   parsePromotionsFromDBToResponse,
 } from '@src/host/draft-listings/mappers/draft-listings.mappers';
-import { HomeListingDto } from '../dto/home-listing.dto';
+import { ListingCardDto } from '../dto/home-listing.dto';
 import { ListingResponseDto } from '../dto/listing-response.dto';
 import {
   HomeListingLocation,
@@ -119,7 +119,7 @@ export function assertListingLocation(
 
 export function mapToHomeListingDto(
   listing: PrismaFeaturedListing,
-): HomeListingDto {
+): ListingCardDto {
   const location = listing.location as HomeListingLocation;
 
   return {
