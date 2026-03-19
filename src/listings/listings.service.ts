@@ -1,23 +1,27 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { CitiesService } from '@src/cities/cities.service';
 import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingWithOptionalRelations } from '@src/listings/types/listing.types';
 import { buildListingsWhere } from './builders/build-listings-where';
-import { ListingCardDto } from './dto/home-listing.dto';
+import { GetListingsByIdQueryDto } from './dto/get-listings-by-id-query.dto';
+import { ListingCardDto } from './dto/listing-card.dto';
 import {
   FindListingByIdOptions,
   SearchListingsOptions,
 } from './repositories/listing.repository.types';
 import { ListingRepository } from './repositories/listings.repository';
 import {
-  ALLOWED_SEARCH_INCLUDES,
   ALLOWED_SINGLE_LISTING_INCLUDES,
   buildSearchInclude,
 } from './utils/listings.utils';
 
 @Injectable()
 export class ListingsService {
-  constructor(private readonly listingRepository: ListingRepository) {}
+  constructor(
+    private readonly listingRepository: ListingRepository,
+    private readonly citiesService: CitiesService,
+  ) {}
 
   async getFeaturedListings(
     query: GetFeaturedListingsQueryDto,
@@ -43,15 +47,41 @@ export class ListingsService {
     });
   }
 
-  async search(
-    query: GetListingsQueryDto,
-  ): Promise<ListingWithOptionalRelations[]> {
+  async search(query: GetListingsQueryDto): Promise<{
+    listings: ListingCardDto[];
+    cityCenter?: { lat: number; lng: number } | null;
+  }> {
     const limit = query.limit;
     const offset = query.offset;
 
-    const where = buildListingsWhere(query);
+    if (!query.city) {
+      return { listings: [], cityCenter: null };
+    }
 
-    const includeParams = buildSearchInclude(query.include);
+    let cityCenter: { lat: number; lng: number } | null = null;
+
+    const hasMapCoordinates =
+      query.neLat !== undefined &&
+      query.neLng !== undefined &&
+      query.swLat !== undefined &&
+      query.swLng !== undefined;
+
+    if (!hasMapCoordinates && query.city) {
+      const matchingCities = await this.citiesService.search(query.city);
+      if (matchingCities.length === 0) {
+        return { listings: [], cityCenter: null };
+      }
+
+      const city = matchingCities[0];
+      cityCenter = {
+        lat: city.lat,
+        lng: city.lng,
+      };
+
+      query.city = city.name;
+    }
+
+    const where = buildListingsWhere(query);
 
     const options: SearchListingsOptions = {
       where,
@@ -61,32 +91,14 @@ export class ListingsService {
       skip: offset,
     };
 
-    for (const includeParam of includeParams) {
-      if (!ALLOWED_SEARCH_INCLUDES.has(includeParam)) {
-        throw new BadRequestException(
-          `Include '${includeParam}' is not allowed in GET /listings search endpoint`,
-        );
-      }
+    const listings = await this.listingRepository.search(options);
 
-      if (includeParam === 'host') {
-        options.includeHost = true;
-      }
-
-      if (includeParam === 'amenities') {
-        options.includeAmenities = true;
-      }
-
-      if (includeParam === '_count') {
-        options.includeCount = true;
-      }
-    }
-
-    return this.listingRepository.search(options);
+    return { listings, cityCenter };
   }
 
   async findById(
     id: string,
-    query: GetListingsQueryDto,
+    query: GetListingsByIdQueryDto,
   ): Promise<ListingWithOptionalRelations> {
     const includeParams = buildSearchInclude(query.include);
 

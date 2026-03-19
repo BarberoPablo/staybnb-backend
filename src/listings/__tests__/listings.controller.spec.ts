@@ -66,21 +66,27 @@ describe('ListingsController', () => {
         updatedAt: new Date(),
       };
 
-      mockListingsService.search.mockResolvedValue([mockListing]);
+      mockListingsService.search.mockResolvedValue({
+        listings: [mockListing],
+        cityCenter: { lat: 0, lng: 0 },
+      });
 
       const query: GetListingsQueryDto = { limit: 10, offset: 0 };
       const result = await controller.getListings(query);
 
       expect(mockListingsService.search).toHaveBeenCalledWith(query);
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('listing-id');
-      expect(result[0].title).toBe('Title');
+      expect(result.listings).toHaveLength(1);
+      expect(result.listings[0].id).toBe('listing-id');
+      expect(result.cityCenter).toEqual({ lat: 0, lng: 0 });
     });
 
-    it('should call service search with city and country filter', async () => {
-      mockListingsService.search.mockResolvedValue([]);
+    it('should call service search with city filter', async () => {
+      mockListingsService.search.mockResolvedValue({
+        listings: [],
+        cityCenter: null,
+      });
 
-      const query: GetListingsQueryDto = { city: 'Paris', country: 'France' };
+      const query: GetListingsQueryDto = { city: 'Paris' };
       await controller.getListings(query);
 
       expect(mockListingsService.search).toHaveBeenCalledWith(query);

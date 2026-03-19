@@ -1,14 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
-import { Listing, ListingStatus } from '@prisma/client';
+import { City, ListingStatus } from '@prisma/client';
+import { CitiesService } from '@src/cities/cities.service';
 import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingsService } from '@src/listings/listings.service';
 import { ListingRepository } from '@src/listings/repositories/listings.repository';
-import { ListingCardDto } from '../dto/home-listing.dto';
+import { ListingCardDto } from '../dto/listing-card.dto';
+import { SortBy, SortOrder } from '../repositories/listing.repository.types';
 
 describe('ListingsService', () => {
   let service: ListingsService;
   let repository: ListingRepository;
+  let citiesService: CitiesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,6 +23,14 @@ describe('ListingsService', () => {
           useValue: {
             search: jest.fn(),
             findFeatured: jest.fn(),
+            findPopular: jest.fn(),
+            findById: jest.fn(),
+          },
+        },
+        {
+          provide: CitiesService,
+          useValue: {
+            search: jest.fn(),
           },
         },
       ],
@@ -26,6 +38,7 @@ describe('ListingsService', () => {
 
     service = module.get<ListingsService>(ListingsService);
     repository = module.get<ListingRepository>(ListingRepository);
+    citiesService = module.get<CitiesService>(CitiesService);
   });
 
   it('should be defined', () => {
@@ -34,267 +47,229 @@ describe('ListingsService', () => {
 
   describe('getFeaturedListings', () => {
     it('should return the result from repository', async () => {
-      const mockResult = [{ id: '1' } as ListingCardDto];
-      const findFeaturedSpy = jest
-        .spyOn(repository, 'findFeatured')
-        .mockResolvedValue(mockResult);
+      const mockResult: ListingCardDto[] = [{ id: '1' } as ListingCardDto];
 
-      const query = new GetFeaturedListingsQueryDto();
-      query.limit = 10;
-      query.offset = 5;
+      jest.spyOn(repository, 'findFeatured').mockResolvedValue(mockResult);
 
+      const query: GetFeaturedListingsQueryDto = { limit: 10, offset: 0 };
       const result = await service.getFeaturedListings(query);
 
-      expect(findFeaturedSpy).toHaveBeenCalledWith({
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(repository.findFeatured).toHaveBeenCalledWith({
         take: 10,
-        skip: 5,
+        skip: 0,
       });
       expect(result).toBe(mockResult);
     });
   });
 
   describe('search', () => {
-    it('should call repository.search with default values when query is empty', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
+    it('should return empty results and NOT call repository when city is missing', async () => {
+      const searchSpy = jest.spyOn(repository, 'search');
 
       const query = new GetListingsQueryDto();
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith({
-        where: { status: ListingStatus.PUBLISHED },
-        sortBy: undefined,
-        sortOrder: undefined,
-        take: 20,
-        skip: 0,
-      });
-    });
-
-    it('should call repository.search with custom pagination (limit and offset)', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.limit = 50;
-      query.offset = 10;
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          take: 50,
-          skip: 10,
-        }),
-      );
-    });
-
-    it('should filter by city when only city is provided', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.city = 'Paris';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            status: ListingStatus.PUBLISHED,
-            city: {
-              equals: 'Paris',
-              mode: 'insensitive',
-            },
-          },
-        }),
-      );
-    });
-
-    it('should filter by country when only country is provided', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.country = 'France';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            status: ListingStatus.PUBLISHED,
-            country: {
-              equals: 'France',
-              mode: 'insensitive',
-            },
-          },
-        }),
-      );
-    });
-
-    it('should return empty array when no listings match Paris/France', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.city = 'Paris';
-      query.country = 'France';
       const result = await service.search(query);
 
-      expect(result).toEqual([]);
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            status: ListingStatus.PUBLISHED,
-            city: {
-              equals: 'Paris',
-              mode: 'insensitive',
-            },
-            country: {
-              equals: 'France',
-              mode: 'insensitive',
-            },
-          },
-        }),
-      );
+      expect(result.listings).toEqual([]);
+      expect(result.cityCenter).toBeNull();
+      expect(searchSpy).not.toHaveBeenCalled();
     });
 
-    it('should return listings for San Francisco/United States', async () => {
-      const mockListing = { id: '1', title: 'SF Loft' } as unknown as Listing;
+    it('should return empty results even if map coordinates are present but city is missing', async () => {
+      const searchSpy = jest.spyOn(repository, 'search');
+
+      const query = new GetListingsQueryDto();
+      query.neLat = 40;
+      query.neLng = 10;
+      query.swLat = 30;
+      query.swLng = 0;
+
+      const result = await service.search(query);
+
+      expect(result.listings).toEqual([]);
+      expect(searchSpy).not.toHaveBeenCalled();
+    });
+
+    it('should search for city center and update city name when city is provided without map coordinates', async () => {
+      const mockCity: City = {
+        id: 'id',
+        name: 'Paris',
+        lat: 48.8566,
+        lng: 2.3522,
+        createdAt: new Date(0),
+        state: null,
+        country: null,
+      };
+
+      const citiesSearchSpy = jest
+        .spyOn(citiesService, 'search')
+        .mockResolvedValue([mockCity]);
+
+      const mockListings: ListingCardDto[] = [];
+
       const searchSpy = jest
         .spyOn(repository, 'search')
-        .mockResolvedValue([mockListing as any]);
+        .mockResolvedValue(mockListings);
 
       const query = new GetListingsQueryDto();
-      query.city = 'San Francisco';
-      query.country = 'United States';
+      query.city = 'paris';
       const result = await service.search(query);
 
-      expect(result).toHaveLength(1);
+      expect(citiesSearchSpy).toHaveBeenCalledWith('paris');
+      expect(result.cityCenter).toEqual({ lat: 48.8566, lng: 2.3522 });
       expect(searchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: {
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              {
+                city: {
+                  contains: 'Paris',
+                  mode: 'insensitive',
+                },
+              },
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('should return empty listings and null cityCenter when no city matches', async () => {
+      const mockEmptyCities: City[] = [];
+
+      jest.spyOn(citiesService, 'search').mockResolvedValue(mockEmptyCities);
+
+      const query = new GetListingsQueryDto();
+      query.city = 'UnknownCity';
+      const result = await service.search(query);
+
+      expect(result.listings).toEqual([]);
+      expect(result.cityCenter).toBeNull();
+    });
+
+    it('should filter by map coordinates when BOTH city and coordinates are provided and NOT call citiesService', async () => {
+      const mockListings: ListingCardDto[] = [];
+
+      const searchSpy = jest
+        .spyOn(repository, 'search')
+        .mockResolvedValue(mockListings);
+
+      const citiesSearchSpy = jest.spyOn(citiesService, 'search');
+
+      const query = new GetListingsQueryDto();
+      query.city = 'Paris'; // City must be provided to pass early return
+      query.neLat = 40;
+      query.neLng = 10;
+      query.swLat = 30;
+      query.swLng = 0;
+      await service.search(query);
+
+      expect(citiesSearchSpy).not.toHaveBeenCalled();
+      expect(searchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              { lat: { gte: 30, lte: 40 } },
+              { lng: { gte: 0, lte: 10 } },
+              { city: { contains: 'Paris', mode: 'insensitive' } },
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('should apply all filters correctly (price, structure, guests, amenities, dates) if city is provided', async () => {
+      const mockCity: City = {
+        id: 'id',
+        name: 'London',
+        lat: 51.5074,
+        lng: -0.1278,
+        createdAt: new Date(0),
+        state: null,
+        country: null,
+      };
+
+      jest.spyOn(citiesService, 'search').mockResolvedValue([mockCity]);
+
+      const mockListings: ListingCardDto[] = [];
+
+      const searchSpy = jest
+        .spyOn(repository, 'search')
+        .mockResolvedValue(mockListings);
+
+      const query = new GetListingsQueryDto();
+      query.city = 'London';
+      query.minPrice = 100;
+      query.maxPrice = 500;
+      query.bedrooms = 2;
+      query.beds = 3;
+      query.bathrooms = 1;
+      query.adults = 2;
+      query.children = 1;
+      query.amenities = 'amenity-1, amenity-2';
+      query.startDate = new Date('2024-06-01');
+      query.endDate = new Date('2024-06-10');
+
+      await service.search(query);
+
+      expect(searchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            nightPrice: { gte: 100, lte: 500 },
+            bedrooms: { gte: 2 },
+            beds: { gte: 3 },
+            bathrooms: { gte: 1 },
+            maxAdults: { gte: 2 },
+            maxChildren: { gte: 1 },
+            maxGuests: { gte: 3 }, // adults + children
+            AND: expect.arrayContaining([
+              { city: { contains: 'London', mode: 'insensitive' } },
+              { amenities: { some: { amenityId: 'amenity-1' } } },
+              { amenities: { some: { amenityId: 'amenity-2' } } },
+            ]),
+            NOT: expect.objectContaining({
+              reservations: {
+                some: expect.objectContaining({
+                  status: 'UPCOMING',
+                }),
+              },
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('should apply sorting when sortBy and sortOrder are provided and city is provided', async () => {
+      const mockCity: City = {
+        id: 'id',
+        name: 'Madrid',
+        lat: 40.4168,
+        lng: -3.7038,
+        createdAt: new Date(0),
+        state: null,
+        country: null,
+      };
+
+      jest.spyOn(citiesService, 'search').mockResolvedValue([mockCity]);
+
+      const mockListings: ListingCardDto[] = [];
+
+      const searchSpy = jest
+        .spyOn(repository, 'search')
+        .mockResolvedValue(mockListings);
+
+      const query = new GetListingsQueryDto();
+      query.city = 'Madrid';
+      query.sortBy = SortBy.NIGHT_PRICE;
+      query.sortOrder = SortOrder.ASC;
+      await service.search(query);
+
+      expect(searchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
             status: ListingStatus.PUBLISHED,
-            city: {
-              equals: 'San Francisco',
-              mode: 'insensitive',
-            },
-            country: {
-              equals: 'United States',
-              mode: 'insensitive',
-            },
-          },
-        }),
-      );
-    });
-
-    it('should call repository.search with explicit undefined when limit and offset are set to undefined', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.limit = undefined;
-      query.offset = undefined;
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          take: undefined,
-          skip: undefined,
-        }),
-      );
-    });
-
-    it('should not add city or country to where clause if they are empty strings', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.city = '';
-      query.country = '';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith({
-        where: { status: ListingStatus.PUBLISHED },
-        sortBy: undefined,
-        sortOrder: undefined,
-        take: 20,
-        skip: 0,
-      });
-    });
-
-    it('should trim city and country in the where clause', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.city = ' Paris ';
-      query.country = ' France ';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            status: ListingStatus.PUBLISHED,
-            city: {
-              equals: 'Paris',
-              mode: 'insensitive',
-            },
-            country: {
-              equals: 'France',
-              mode: 'insensitive',
-            },
-          },
-        }),
-      );
-    });
-
-    it('should apply sorting when sortBy and sortOrder are provided', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.sortBy = 'nightPrice';
-      query.sortOrder = 'asc';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
+          }),
           sortBy: 'nightPrice',
           sortOrder: 'asc',
-        }),
-      );
-    });
-
-    it('should default sortOrder to undefined in options when only sortBy is provided', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.sortBy = 'nightPrice';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sortBy: 'nightPrice',
-          sortOrder: undefined,
-        }),
-      );
-    });
-
-    it('should set includeHost to true when include=host', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.include = 'host';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          includeHost: true,
-        }),
-      );
-    });
-
-    it('should set multiple include flags when include has multiple values', async () => {
-      const searchSpy = jest.spyOn(repository, 'search').mockResolvedValue([]);
-
-      const query = new GetListingsQueryDto();
-      query.include = 'host,amenities,_count';
-      await service.search(query);
-
-      expect(searchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          includeHost: true,
-          includeAmenities: true,
-          includeCount: true,
         }),
       );
     });

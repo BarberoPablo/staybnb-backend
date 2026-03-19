@@ -2,7 +2,7 @@ import {
   parseLocationFromDBToResponse,
   parsePromotionsFromDBToResponse,
 } from '@src/host/draft-listings/mappers/draft-listings.mappers';
-import { ListingCardDto } from '../dto/home-listing.dto';
+import { ListingCardDto } from '../dto/listing-card.dto';
 import { ListingResponseDto } from '../dto/listing-response.dto';
 import {
   HomeListingLocation,
@@ -117,7 +117,7 @@ export function assertListingLocation(
     throw new Error('Invalid listing location shape');
 }
 
-export function mapToHomeListingDto(
+export function mapToListingCardDto(
   listing: PrismaFeaturedListing,
 ): ListingCardDto {
   const location = listing.location as HomeListingLocation;
@@ -134,6 +134,8 @@ export function mapToHomeListingDto(
       city: listing.city,
       country: listing.country,
       state: location.state,
+      lat: listing.lat,
+      lng: listing.lng,
     },
   };
 }
