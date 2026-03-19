@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { City } from '@prisma/client';
 import { GetCitiesQueryDto } from './dto/get-cities-query.dto';
 import { PopularDestinationDto } from './dto/popular-destination-response.dto';
 import { mapToPopularDestinationDto } from './mappers/cities.mapper';
@@ -20,5 +21,9 @@ export class CitiesService {
     });
 
     return rawCities.map(mapToPopularDestinationDto);
+  }
+
+  async search(name: string): Promise<City[]> {
+    return this.repository.search(name);
   }
 }

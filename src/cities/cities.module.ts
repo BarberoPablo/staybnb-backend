@@ -6,5 +6,6 @@ import { CitiesRepository } from './repositories/cities.repository';
 @Module({
   controllers: [CitiesController],
   providers: [CitiesService, CitiesRepository],
+  exports: [CitiesService],
 })
 export class CitiesModule {}
