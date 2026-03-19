@@ -6,7 +6,7 @@ import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
 import { ListingsService } from '@src/listings/listings.service';
 import { mapListingToResponse } from '@src/listings/mappers/listings.mapper';
-import { HomeListingDto } from './dto/home-listing.dto';
+import { ListingCardDto } from './dto/home-listing.dto';
 
 @Public()
 @ApiTags('Listings')
@@ -22,7 +22,7 @@ export class ListingsController {
     return listings.map(mapListingToResponse);
   }
 
-  @ApiOkResponse({ type: HomeListingDto, isArray: true })
+  @ApiOkResponse({ type: ListingCardDto, isArray: true })
   @Get('featured')
   @Header(
     'Cache-Control',
@@ -30,11 +30,11 @@ export class ListingsController {
   )
   async getFeaturedListings(
     @Query() query: GetFeaturedListingsQueryDto,
-  ): Promise<HomeListingDto[]> {
+  ): Promise<ListingCardDto[]> {
     return this.service.getFeaturedListings(query);
   }
 
-  @ApiOkResponse({ type: HomeListingDto, isArray: true })
+  @ApiOkResponse({ type: ListingCardDto, isArray: true })
   @Get('popular')
   @Header(
     'Cache-Control',
@@ -42,7 +42,7 @@ export class ListingsController {
   )
   async getPopularListings(
     @Query() query: GetFeaturedListingsQueryDto,
-  ): Promise<HomeListingDto[]> {
+  ): Promise<ListingCardDto[]> {
     return this.service.getPopularListings(query);
   }
 
