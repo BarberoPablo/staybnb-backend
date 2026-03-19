@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ListingStatus } from '@prisma/client';
+import { City, ListingStatus } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   PopularCitiesOptions,
@@ -28,5 +28,17 @@ export class CitiesRepository {
       ORDER BY "listingCount" DESC
       LIMIT ${options.take} OFFSET ${options.skip}
     `;
+  }
+
+  async search(name: string): Promise<City[]> {
+    return this.prisma.city.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: 'insensitive',
+        },
+      },
+      take: 5,
+    });
   }
 }

@@ -16,6 +16,7 @@ describe('CitiesService', () => {
           provide: CitiesRepository,
           useValue: {
             findPopular: jest.fn(),
+            search: jest.fn(),
           },
         },
       ],
@@ -51,13 +52,27 @@ describe('CitiesService', () => {
       const result = await service.getPopularCities(query);
 
       expect(findPopularSpy).toHaveBeenCalledWith({
-        limit: 10,
-        offset: 5,
+        take: 10,
+        skip: 5,
       });
 
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Paris');
       expect(result[0].id).toBe('Paris-France');
+    });
+  });
+
+  describe('search', () => {
+    it('should call repository.search with name', async () => {
+      const mockCities = [{ name: 'Paris', lat: 48.8566, lng: 2.3522 }];
+      const searchSpy = jest
+        .spyOn(repository, 'search')
+        .mockResolvedValue(mockCities as any);
+
+      const result = await service.search('Paris');
+
+      expect(searchSpy).toHaveBeenCalledWith('Paris');
+      expect(result).toBe(mockCities);
     });
   });
 });
