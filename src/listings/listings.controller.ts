@@ -6,7 +6,11 @@ import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
 import { ListingsService } from '@src/listings/listings.service';
 import { mapListingToResponse } from '@src/listings/mappers/listings.mapper';
-import { ListingCardDto } from './dto/home-listing.dto';
+import { GetListingsByIdQueryDto } from './dto/get-listings-by-id-query.dto';
+import {
+  ListingCardDto,
+  SearchListingsResponseDto,
+} from './dto/listing-card.dto';
 
 @Public()
 @ApiTags('Listings')
@@ -14,12 +18,16 @@ import { ListingCardDto } from './dto/home-listing.dto';
 export class ListingsController {
   constructor(private readonly service: ListingsService) {}
 
+  @ApiOkResponse({ type: SearchListingsResponseDto })
   @Get()
   async getListings(
     @Query() query: GetListingsQueryDto,
-  ): Promise<ListingResponseDto[]> {
-    const listings = await this.service.search(query);
-    return listings.map(mapListingToResponse);
+  ): Promise<SearchListingsResponseDto> {
+    const { listings, cityCenter } = await this.service.search(query);
+    return {
+      listings,
+      cityCenter,
+    };
   }
 
   @ApiOkResponse({ type: ListingCardDto, isArray: true })
@@ -49,7 +57,7 @@ export class ListingsController {
   @Get(':id')
   async getListingById(
     @Param('id') id: string,
-    @Query() query: GetListingsQueryDto,
+    @Query() query: GetListingsByIdQueryDto,
   ): Promise<ListingResponseDto> {
     const listing = await this.service.findById(id, query);
     return mapListingToResponse(listing);

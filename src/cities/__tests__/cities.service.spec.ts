@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CitiesService } from '../cities.service';
 import { GetCitiesQueryDto } from '../dto/get-cities-query.dto';
-import { PopularDestinationDto } from '../dto/popular-destination-response.dto';
 import { CitiesRepository } from '../repositories/cities.repository';
 
 describe('CitiesService', () => {

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { PrivacyType, PropertyType } from '../types/listing.types';
 import { privacyTypes, propertyTypes } from '../types/listing.types';
 
@@ -11,6 +11,12 @@ export class ListingCardLocationDto {
 
   @ApiProperty()
   country: string;
+
+  @ApiProperty()
+  lat: number;
+
+  @ApiProperty()
+  lng: number;
 }
 
 export class ListingCardDto {
@@ -37,4 +43,20 @@ export class ListingCardDto {
 
   @ApiProperty({ type: ListingCardLocationDto })
   location: ListingCardLocationDto;
+}
+
+export class CityCenterDto {
+  @ApiProperty()
+  lat: number;
+
+  @ApiProperty()
+  lng: number;
+}
+
+export class SearchListingsResponseDto {
+  @ApiProperty({ type: ListingCardDto, isArray: true })
+  listings: ListingCardDto[];
+
+  @ApiPropertyOptional({ type: CityCenterDto, nullable: true })
+  cityCenter?: CityCenterDto | null;
 }

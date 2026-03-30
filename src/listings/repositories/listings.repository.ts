@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { ListingCardDto } from '../dto/home-listing.dto';
+import { ListingCardDto } from '../dto/listing-card.dto';
 import {
   assertListingLocation,
-  mapToHomeListingDto,
+  mapToListingCardDto,
 } from '../mappers/listings.mapper';
 import { ListingWithOptionalRelations } from '../types/listing.types';
 import {
   FeaturedListingsOptions,
   FindListingByIdOptions,
+  LISTING_CARD_SELECT,
   PopularListingsOptions,
   SearchListingsOptions,
 } from './listing.repository.types';
@@ -28,18 +29,7 @@ export class ListingRepository {
           gte: 4,
         },
       },
-      select: {
-        id: true,
-        title: true,
-        nightPrice: true,
-        images: true,
-        ratingAvg: true,
-        propertyType: true,
-        privacyType: true,
-        city: true,
-        country: true,
-        location: true,
-      },
+      select: LISTING_CARD_SELECT,
       orderBy: [
         { ratingAvg: 'desc' },
         { ratingCount: 'desc' },
@@ -49,7 +39,7 @@ export class ListingRepository {
       skip: options.skip,
     });
 
-    return listings.map(mapToHomeListingDto);
+    return listings.map(mapToListingCardDto);
   }
 
   async findPopular(
@@ -63,18 +53,7 @@ export class ListingRepository {
       where: {
         status: ListingStatus.PUBLISHED,
       },
-      select: {
-        id: true,
-        title: true,
-        nightPrice: true,
-        images: true,
-        ratingAvg: true,
-        propertyType: true,
-        privacyType: true,
-        city: true,
-        country: true,
-        location: true,
-      },
+      select: LISTING_CARD_SELECT,
       orderBy: [
         {
           reservations: {
@@ -89,18 +68,10 @@ export class ListingRepository {
       skip: options.skip,
     });
 
-    return listings.map(mapToHomeListingDto);
+    return listings.map(mapToListingCardDto);
   }
 
-  async search(
-    options: SearchListingsOptions,
-  ): Promise<ListingWithOptionalRelations[]> {
-    const include: Prisma.ListingInclude = {};
-
-    if (options.includeHost) include.host = true;
-    if (options.includeAmenities) include.amenities = true;
-    if (options.includeCount) include._count = true;
-
+  async search(options: SearchListingsOptions): Promise<ListingCardDto[]> {
     const orderBy: Prisma.ListingOrderByWithRelationInput = options.sortBy
       ? ({
           [options.sortBy]: options.sortOrder ?? 'desc',
@@ -109,13 +80,13 @@ export class ListingRepository {
 
     const listings = await this.prisma.listing.findMany({
       where: options.where,
-      include,
+      select: LISTING_CARD_SELECT,
       orderBy,
       take: options.take,
       skip: options.skip,
     });
 
-    return listings.map((listing) => this.sanitizeListing(listing));
+    return listings.map(mapToListingCardDto);
   }
 
   async findById(

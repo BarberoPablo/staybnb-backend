@@ -81,6 +81,8 @@ export type PrismaFeaturedListing = Prisma.ListingGetPayload<{
     privacyType: true;
     city: true;
     country: true;
+    lat: true;
+    lng: true;
     location: true;
   };
 }>;
