@@ -3,14 +3,14 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '@src/auth/public.decorator';
 import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
-import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
 import { ListingsService } from '@src/listings/listings.service';
-import { mapListingToResponse } from '@src/listings/mappers/listings.mapper';
-import { GetListingsByIdQueryDto } from './dto/get-listings-by-id-query.dto';
+import { mapToListingCheckoutResponse } from '@src/listings/mappers/listings.mapper';
 import {
   ListingCardDto,
   SearchListingsResponseDto,
 } from './dto/listing-card.dto';
+import { ListingCheckoutResponseDto } from './dto/listing-checkout-response.dto';
+import { ListingDetailsResponseDto } from './dto/listing-details-response.dto';
 
 @Public()
 @ApiTags('Listings')
@@ -54,12 +54,18 @@ export class ListingsController {
     return this.service.getPopularListings(query);
   }
 
+  @ApiOkResponse({ type: ListingDetailsResponseDto })
   @Get(':id')
-  async getListingById(
+  async findOne(@Param('id') id: string): Promise<ListingDetailsResponseDto> {
+    return this.service.getListingDetails(id);
+  }
+
+  @ApiOkResponse({ type: ListingCheckoutResponseDto })
+  @Get(':id/checkout')
+  async getCheckoutInfo(
     @Param('id') id: string,
-    @Query() query: GetListingsByIdQueryDto,
-  ): Promise<ListingResponseDto> {
-    const listing = await this.service.findById(id, query);
-    return mapListingToResponse(listing);
+  ): Promise<ListingCheckoutResponseDto> {
+    const listing = await this.service.getListingCheckout(id);
+    return mapToListingCheckoutResponse(listing);
   }
 }

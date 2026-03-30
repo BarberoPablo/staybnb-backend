@@ -63,11 +63,37 @@ export type ListingWithOptionalRelations = Omit<Listing, 'location'> & {
   amenities?: ListingAmenity[];
   host?: Profile;
   reservations?: Reservation[];
-  reviews?: Review[];
+  reviews?: Array<Review & { imageUrl?: string }>;
   _count?: {
     reservations?: number;
     favorites?: number;
   };
+};
+
+export type ListingDetails = Omit<Listing, 'location'> & {
+  location: Prisma.JsonValue;
+  amenities: {
+    amenityId: string;
+  }[];
+  host: {
+    id: string;
+    firstName: string;
+    avatarUrl: string | null;
+  };
+  reviews: {
+    id: string;
+    profile: {
+      id: string;
+      avatarUrl: string | null;
+    };
+    score: number;
+    message: string;
+  }[];
+  reservations: {
+    id: string;
+    startDate: Date;
+    endDate: Date;
+  }[];
 };
 
 export type PrismaFeaturedListing = Prisma.ListingGetPayload<{

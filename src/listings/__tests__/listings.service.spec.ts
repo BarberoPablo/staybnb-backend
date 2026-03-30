@@ -24,7 +24,8 @@ describe('ListingsService', () => {
             search: jest.fn(),
             findFeatured: jest.fn(),
             findPopular: jest.fn(),
-            findById: jest.fn(),
+            findWithDetails: jest.fn(),
+            findForCheckout: jest.fn(),
           },
         },
         {
@@ -272,6 +273,30 @@ describe('ListingsService', () => {
           sortOrder: 'asc',
         }),
       );
+    });
+  });
+
+  describe('getListingDetails', () => {
+    it('should return result from repository', async () => {
+      const mockResult = { id: '1' } as any;
+      jest.spyOn(repository, 'findWithDetails').mockResolvedValue(mockResult);
+
+      const result = await service.getListingDetails('1');
+
+      expect(repository.findWithDetails).toHaveBeenCalledWith({ id: '1' });
+      expect(result).toBe(mockResult);
+    });
+  });
+
+  describe('getListingCheckout', () => {
+    it('should return result from repository', async () => {
+      const mockResult = { id: '1' } as any;
+      jest.spyOn(repository, 'findForCheckout').mockResolvedValue(mockResult);
+
+      const result = await service.getListingCheckout('1');
+
+      expect(repository.findForCheckout).toHaveBeenCalledWith({ id: '1' });
+      expect(result).toBe(mockResult);
     });
   });
 });

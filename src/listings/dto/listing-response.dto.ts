@@ -1,56 +1,202 @@
-import {
-  ListingStatus,
-  PrivacyType,
-  Profile,
-  PropertyType,
-  Reservation,
-  Review,
-} from '@prisma/client';
-import { ListingLocationResponse, Promotion } from '../types/listing.types';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ListingStatus, PrivacyType, PropertyType } from '@prisma/client';
 
-export class ListingResponseDto {
-  id: string;
-  title: string;
+export class ListingLocationDto {
+  @ApiProperty()
+  country: string;
+
+  @ApiProperty()
+  city: string;
+
+  @ApiProperty()
+  lat: number;
+
+  @ApiProperty()
+  lng: number;
+
+  @ApiProperty()
+  formatted: string;
+
+  @ApiProperty()
+  housenumber: string;
+
+  @ApiProperty()
+  street: string;
+
+  @ApiProperty()
+  state: string;
+
+  @ApiProperty()
+  postcode: string;
+
+  @ApiProperty()
+  timezone: string;
+}
+
+export class ListingPromotionDto {
+  @ApiProperty()
+  minNights: number;
+
+  @ApiProperty()
+  discountPercentage: number;
+
+  @ApiProperty()
   description: string;
-  nightPrice: number;
+}
 
-  propertyType: PropertyType;
-  privacyType: PrivacyType;
+export class ListingStructureDto {
+  @ApiProperty()
+  bedrooms: number;
 
-  location: ListingLocationResponse;
+  @ApiProperty()
+  beds: number;
 
-  images: string[];
-  promotions: Promotion[];
+  @ApiProperty()
+  bathrooms: number;
 
-  structure: {
-    bedrooms: number;
-    beds: number;
-    bathrooms: number;
-    guests: number;
-  };
+  @ApiProperty()
+  guests: number;
+}
 
-  guestLimits: {
-    adults: { min: number; max: number };
-    children: { min: number; max: number };
-    infant: { min: number; max: number };
-    pets: { min: number; max: number };
-  };
+export class GuestLimitDto {
+  @ApiProperty()
+  min: number;
 
-  status: ListingStatus;
-  ratingAvg: number;
-  ratingCount: number;
+  @ApiProperty()
+  max: number;
+}
 
+export class ListingGuestLimitsDto {
+  @ApiProperty({ type: GuestLimitDto })
+  adults: GuestLimitDto;
+
+  @ApiProperty({ type: GuestLimitDto })
+  children: GuestLimitDto;
+
+  @ApiProperty({ type: GuestLimitDto })
+  infant: GuestLimitDto;
+
+  @ApiProperty({ type: GuestLimitDto })
+  pets: GuestLimitDto;
+}
+
+export class ListingHostDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  firstName: string;
+
+  @ApiProperty()
+  lastName: string;
+
+  @ApiPropertyOptional()
+  avatarUrl?: string;
+
+  @ApiPropertyOptional()
+  bio?: string;
+}
+
+export class ListingReservationDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  startDate: Date;
+
+  @ApiProperty()
+  endDate: Date;
+}
+
+export class ListingReviewDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  score: number;
+
+  @ApiProperty()
+  message: string;
+
+  @ApiProperty()
   createdAt: Date;
-  updatedAt: Date;
 
-  amenities?: string[];
-  host?: Profile;
-  reservations?: Reservation[];
-  reviews?: Review[];
-  counts?: ListingCountsDto;
+  @ApiProperty({ type: ListingHostDto })
+  profile: ListingHostDto;
 }
 
 export class ListingCountsDto {
+  @ApiPropertyOptional()
   reservations?: number;
+
+  @ApiPropertyOptional()
   favorites?: number;
+
+  @ApiPropertyOptional()
+  reviews?: number;
+}
+
+export class ListingResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  title: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  nightPrice: number;
+
+  @ApiProperty({ enum: PropertyType })
+  propertyType: PropertyType;
+
+  @ApiProperty({ enum: PrivacyType })
+  privacyType: PrivacyType;
+
+  @ApiProperty({ type: ListingLocationDto })
+  location: ListingLocationDto;
+
+  @ApiProperty({ type: [String] })
+  images: string[];
+
+  @ApiProperty({ type: [ListingPromotionDto] })
+  promotions: ListingPromotionDto[];
+
+  @ApiProperty({ type: ListingStructureDto })
+  structure: ListingStructureDto;
+
+  @ApiProperty({ type: ListingGuestLimitsDto })
+  guestLimits: ListingGuestLimitsDto;
+
+  @ApiProperty({ enum: ListingStatus })
+  status: ListingStatus;
+
+  @ApiProperty()
+  ratingAvg: number;
+
+  @ApiProperty()
+  ratingCount: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiPropertyOptional({ type: [String] })
+  amenities?: string[];
+
+  @ApiPropertyOptional({ type: ListingHostDto })
+  host?: ListingHostDto;
+
+  @ApiPropertyOptional({ type: [ListingReservationDto] })
+  reservations?: ListingReservationDto[];
+
+  @ApiPropertyOptional({ type: [ListingReviewDto] })
+  reviews?: ListingReviewDto[];
+
+  @ApiPropertyOptional({ type: ListingCountsDto })
+  counts?: ListingCountsDto;
 }

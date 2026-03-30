@@ -1,8 +1,8 @@
 import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
+import { parsePromotionsFromDBToResponse } from '@src/listings/mappers/listings.mapper';
 import {
   ListingLocation,
   ListingLocationResponse,
-  Promotion,
 } from '@src/listings/types/listing.types';
 import { DraftListingResponseDto } from '../dto/draft-listing-response.dto';
 import { DraftListing } from '../dto/draft-listing.types';
@@ -113,18 +113,6 @@ export function parseLocationFromDBToResponse(
     postcode: loc.postcode,
     timezone: loc.timezone,
   };
-}
-
-/**
- * Runtime guard for promotions stored as Json in DraftListing.
- */
-export function parsePromotionsFromDBToResponse(
-  promotion: Prisma.JsonValue,
-): Promotion[] {
-  if (!promotion || !Array.isArray(promotion)) {
-    throw new Error('Invalid promotion');
-  }
-  return promotion as Promotion[];
 }
 
 export function mapDraftToListing(

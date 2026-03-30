@@ -6,10 +6,14 @@ import {
   assertListingLocation,
   mapToListingCardDto,
 } from '../mappers/listings.mapper';
-import { ListingWithOptionalRelations } from '../types/listing.types';
+import {
+  ListingDetails,
+  ListingWithOptionalRelations,
+} from '../types/listing.types';
 import {
   FeaturedListingsOptions,
-  FindListingByIdOptions,
+  FindForCheckoutOptions,
+  FindWithDetailsOptions,
   LISTING_CARD_SELECT,
   PopularListingsOptions,
   SearchListingsOptions,
@@ -89,45 +93,64 @@ export class ListingRepository {
     return listings.map(mapToListingCardDto);
   }
 
-  async findById(
-    id: string,
-    options: FindListingByIdOptions = {},
-  ): Promise<ListingWithOptionalRelations> {
+  async findWithDetails(
+    options: FindWithDetailsOptions,
+  ): Promise<ListingDetails> {
     const upcomingReservationFilter = {
       status: ReservationStatus.UPCOMING,
       endDate: { gte: new Date() },
     };
 
-    const include: Prisma.ListingInclude = {};
-
-    if (options.includeHost) include.host = true;
-    if (options.includeAmenities) include.amenities = true;
-    if (options.includeReviews) include.reviews = true;
-
-    let includeReservations = false;
-
-    if (options.includeReservations) {
-      includeReservations = true;
-
-      include.reservations = {
-        where: upcomingReservationFilter,
-        orderBy: { startDate: 'asc' },
-      };
-    }
-
-    if (options.includeCount) {
-      include._count = {
-        select: {
-          reservations: includeReservations
-            ? { where: upcomingReservationFilter }
-            : true,
-        },
-      };
-    }
-
     const listing = await this.prisma.listing.findUniqueOrThrow({
-      where: { id },
-      include,
+      where: { id: options.id },
+      include: {
+        host: {
+          select: {
+            id: true,
+            firstName: true,
+            avatarUrl: true,
+          },
+        },
+        amenities: {
+          select: {
+            amenityId: true,
+          },
+        },
+        reviews: {
+          select: {
+            id: true,
+            score: true,
+            message: true,
+            profile: {
+              select: {
+                id: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+        },
+        reservations: {
+          where: upcomingReservationFilter,
+          select: {
+            id: true,
+            startDate: true,
+            endDate: true,
+          },
+          orderBy: { startDate: 'asc' },
+        },
+      },
+    });
+
+    return listing;
+  }
+
+  async findForCheckout(
+    options: FindForCheckoutOptions,
+  ): Promise<ListingWithOptionalRelations> {
+    const listing = await this.prisma.listing.findUniqueOrThrow({
+      where: { id: options.id },
     });
 
     return this.sanitizeListing(listing);
