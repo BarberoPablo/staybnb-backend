@@ -12,4 +12,8 @@ export class AmenitiesRepository {
       where: { id: { in: uniqueIds } },
     });
   }
+
+  async getAmenities() {
+    return this.prisma.amenity.findMany();
+  }
 }
