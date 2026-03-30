@@ -5,6 +5,8 @@ import { ListingsService } from '@src/listings/listings.service';
 
 const mockListingsService = {
   search: jest.fn(),
+  getListingDetails: jest.fn(),
+  getListingCheckout: jest.fn(),
 };
 
 describe('ListingsController', () => {
@@ -90,6 +92,90 @@ describe('ListingsController', () => {
       await controller.getListings(query);
 
       expect(mockListingsService.search).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return listing details', async () => {
+      const mockListing: any = {
+        id: '1',
+        title: 'Title',
+        description: 'Desc',
+        nightPrice: 100,
+        images: [],
+        bedrooms: 1,
+        beds: 1,
+        bathrooms: 1,
+        maxGuests: 2,
+        maxAdults: 2,
+        maxChildren: 0,
+        maxInfants: 0,
+        maxPets: 0,
+        location: {
+          formatted: 'Formatted',
+          housenumber: '1',
+          street: 'Street',
+          state: 'State',
+          postcode: '123',
+          timezone: 'Timezone',
+        },
+        city: 'City',
+        country: 'Country',
+        lat: 0,
+        lng: 0,
+        promotions: [],
+        propertyType: 'HOUSE',
+        privacyType: 'ENTIRE',
+        amenities: [],
+        status: 'PUBLISHED',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ratingAvg: 5,
+        ratingCount: 1,
+      };
+
+      mockListingsService.getListingDetails.mockResolvedValue(mockListing);
+
+      const result = await controller.findOne('1');
+
+      expect(mockListingsService.getListingDetails).toHaveBeenCalledWith('1');
+      expect(result.id).toBe('1');
+    });
+  });
+
+  describe('getCheckoutInfo', () => {
+    it('should return listing checkout info', async () => {
+      const mockListing: any = {
+        id: '1',
+        title: 'Title',
+        ratingAvg: 5,
+        ratingCount: 1,
+        city: 'City',
+        country: 'Country',
+        propertyType: 'HOUSE',
+        bedrooms: 1,
+        beds: 1,
+        bathrooms: 1,
+        maxGuests: 2,
+        minCancelDays: 3,
+        nightPrice: 100,
+        location: {
+          formatted: 'Formatted',
+          housenumber: '1',
+          street: 'Street',
+          state: 'State',
+          postcode: '123',
+          timezone: 'Timezone',
+        },
+      };
+
+      mockListingsService.getListingCheckout.mockResolvedValue(mockListing);
+
+      const result = await controller.getCheckoutInfo('1');
+
+      expect(mockListingsService.getListingCheckout).toHaveBeenCalledWith('1');
+      expect(result.id).toBe('1');
+      expect(result.formattedLocation).toBe('City, Country');
     });
   });
 });

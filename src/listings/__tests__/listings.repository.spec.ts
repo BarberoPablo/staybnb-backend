@@ -46,6 +46,7 @@ describe('ListingRepository', () => {
           useValue: {
             listing: {
               findMany: jest.fn(),
+              findUniqueOrThrow: jest.fn(),
             },
           },
         },
@@ -178,6 +179,84 @@ describe('ListingRepository', () => {
           orderBy: { createdAt: 'desc' },
         }),
       );
+    });
+  });
+
+  describe('findWithDetails', () => {
+    it('should return listing with details from prisma', async () => {
+      const mockListing: any = {
+        id: '1',
+        location: {
+          formatted: 'Formatted',
+          housenumber: '1',
+          street: 'Street',
+          state: 'State',
+          postcode: '123',
+          timezone: 'Timezone',
+        },
+        city: 'City',
+        country: 'Country',
+        lat: 0,
+        lng: 0,
+        promotions: [],
+      };
+
+      const findUniqueSpy = jest
+        .spyOn(prisma.listing, 'findUniqueOrThrow')
+        .mockResolvedValue(mockListing);
+
+      const result = await repository.findWithDetails({ id: '1' });
+
+      expect(findUniqueSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: '1' },
+          include: expect.objectContaining({
+            host: true,
+            amenities: true,
+            reviews: expect.objectContaining({
+              include: { profile: true },
+            }),
+            reservations: expect.objectContaining({
+              where: expect.objectContaining({
+                status: 'UPCOMING',
+              }),
+            }),
+          }),
+        }),
+      );
+      expect(result.id).toBe('1');
+    });
+  });
+
+  describe('findForCheckout', () => {
+    it('should return listing for checkout from prisma', async () => {
+      const mockListing: any = {
+        id: '1',
+        location: {
+          formatted: 'Formatted',
+          housenumber: '1',
+          street: 'Street',
+          state: 'State',
+          postcode: '123',
+          timezone: 'Timezone',
+        },
+        city: 'City',
+        country: 'Country',
+        lat: 0,
+        lng: 0,
+        promotions: [],
+      };
+
+      const findUniqueSpy = jest
+        .spyOn(prisma.listing, 'findUniqueOrThrow')
+        .mockResolvedValue(mockListing);
+
+      const result = await repository.findForCheckout({ id: '1' });
+
+      expect(findUniqueSpy).toHaveBeenCalledWith({
+        where: { id: '1' },
+      });
+      expect(result.id).toBe('1');
     });
   });
 });

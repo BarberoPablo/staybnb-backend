@@ -1,14 +1,17 @@
-import {
-  parseLocationFromDBToResponse,
-  parsePromotionsFromDBToResponse,
-} from '@src/host/draft-listings/mappers/draft-listings.mappers';
+import { Prisma } from '@prisma/client';
+import { parseLocationFromDBToResponse } from '@src/host/draft-listings/mappers/draft-listings.mappers';
 import { ListingCardDto } from '../dto/listing-card.dto';
-import { ListingResponseDto } from '../dto/listing-response.dto';
+import { ListingCheckoutResponseDto } from '../dto/listing-checkout-response.dto';
+import {
+  ListingCountsDto,
+  ListingResponseDto,
+} from '../dto/listing-response.dto';
 import {
   HomeListingLocation,
   ListingLocation,
   ListingWithOptionalRelations,
   PrismaFeaturedListing,
+  Promotion,
 } from '../types/listing.types';
 
 export function mapListingToResponse(
@@ -63,19 +66,41 @@ export function mapListingToResponse(
   }
 
   if (listing.host) {
-    response.host = listing.host;
+    response.host = {
+      id: listing.host.id,
+      firstName: listing.host.firstName,
+      lastName: listing.host.lastName,
+      avatarUrl: listing.host.avatarUrl ?? undefined,
+      bio: listing.host.bio ?? undefined,
+    };
   }
 
   if (listing.reservations) {
-    response.reservations = listing.reservations;
+    response.reservations = listing.reservations.map((res) => ({
+      id: res.id,
+      startDate: res.startDate,
+      endDate: res.endDate,
+    }));
   }
 
   if (listing.reviews) {
-    response.reviews = listing.reviews;
+    response.reviews = listing.reviews.map((rev: any) => ({
+      id: rev.id,
+      score: rev.score,
+      message: rev.message,
+      createdAt: rev.createdAt,
+      profile: {
+        id: rev.profile.id,
+        firstName: rev.profile.firstName,
+        lastName: rev.profile.lastName,
+        avatarUrl: rev.profile.avatarUrl ?? undefined,
+        bio: rev.profile.bio ?? undefined,
+      },
+    }));
   }
 
   if (listing._count) {
-    const counts: ListingResponseDto['counts'] = {};
+    const counts: ListingCountsDto = {};
 
     if (typeof listing._count.reservations === 'number') {
       counts.reservations = listing._count.reservations;
@@ -91,6 +116,25 @@ export function mapListingToResponse(
   }
 
   return response;
+}
+
+export function mapToListingCheckoutResponse(
+  listing: ListingWithOptionalRelations,
+): ListingCheckoutResponseDto {
+  return {
+    id: listing.id,
+    title: listing.title,
+    ratingAvg: listing.ratingAvg,
+    ratingCount: listing.ratingCount,
+    formattedLocation: `${listing.city}, ${listing.country}`,
+    propertyType: listing.propertyType,
+    bedrooms: listing.bedrooms,
+    beds: listing.beds,
+    bathrooms: listing.bathrooms,
+    maxGuests: listing.maxGuests,
+    minCancelDays: listing.minCancelDays,
+    nightPrice: listing.nightPrice,
+  };
 }
 
 /**
@@ -138,4 +182,16 @@ export function mapToListingCardDto(
       lng: listing.lng,
     },
   };
+}
+
+/**
+ * Runtime guard for promotions stored as Json in DraftListing.
+ */
+export function parsePromotionsFromDBToResponse(
+  promotion: Prisma.JsonValue,
+): Promotion[] {
+  if (!promotion || !Array.isArray(promotion)) {
+    throw new Error('Invalid promotion');
+  }
+  return promotion as Promotion[];
 }

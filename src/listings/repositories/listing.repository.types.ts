@@ -26,19 +26,16 @@ export enum SortOrder {
   DESC = 'desc',
 }
 
-export interface FindListingByIdOptions {
-  includeHost?: boolean;
-  includeAmenities?: boolean;
-  includeReservations?: boolean;
-  includeReviews?: boolean;
-  includeCount?: boolean;
+export interface FindWithDetailsOptions {
+  id: string;
+}
+
+export interface FindForCheckoutOptions {
+  id: string;
 }
 
 export interface SearchListingsOptions {
   where: Prisma.ListingWhereInput;
-  includeHost?: boolean;
-  includeAmenities?: boolean;
-  includeCount?: boolean;
   sortBy?: SortBy;
   sortOrder?: SortOrder;
   take?: number;
