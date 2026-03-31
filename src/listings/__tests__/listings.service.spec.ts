@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { City, ListingStatus } from '@prisma/client';
 import { CitiesService } from '@src/cities/cities.service';
@@ -8,6 +9,10 @@ import { ListingsService } from '@src/listings/listings.service';
 import { ListingRepository } from '@src/listings/repositories/listings.repository';
 import { ListingCardDto } from '../dto/listing-card.dto';
 import { SortBy, SortOrder } from '../repositories/listing.repository.types';
+import {
+  ListingDetails,
+  ListingWithOptionalRelations,
+} from '../types/listing.types';
 
 describe('ListingsService', () => {
   let service: ListingsService;
@@ -55,7 +60,6 @@ describe('ListingsService', () => {
       const query: GetFeaturedListingsQueryDto = { limit: 10, offset: 0 };
       const result = await service.getFeaturedListings(query);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(repository.findFeatured).toHaveBeenCalledWith({
         take: 10,
         skip: 0,
@@ -207,8 +211,8 @@ describe('ListingsService', () => {
       query.adults = 2;
       query.children = 1;
       query.amenities = 'amenity-1, amenity-2';
-      query.startDate = new Date('2024-06-01');
-      query.endDate = new Date('2024-06-10');
+      query.startDate = '2024-06-01';
+      query.endDate = '2024-06-10';
 
       await service.search(query);
 
@@ -277,20 +281,144 @@ describe('ListingsService', () => {
   });
 
   describe('getListingDetails', () => {
-    it('should return result from repository', async () => {
-      const mockResult = { id: '1' } as any;
-      jest.spyOn(repository, 'findWithDetails').mockResolvedValue(mockResult);
+    const mockListing: ListingDetails = {
+      id: '1',
+      hostId: 'hostId',
+      title: 'Title',
+      description: 'Description',
+      nightPrice: 100,
+      images: ['img.jpg'],
+      location: {
+        formatted: 'Formatted',
+        housenumber: '1',
+        street: 'Street',
+        state: 'State',
+        postcode: '123',
+        timezone: 'Timezone',
+      },
+      city: 'City',
+      country: 'Country',
+      lat: 48.8566,
+      lng: 2.3522,
+      checkInTime: '15:00',
+      checkOutTime: '10:00',
+      minCancelDays: 4,
+      maxGuests: 4,
+      maxAdults: 4,
+      maxChildren: 2,
+      maxInfants: 1,
+      maxPets: 1,
+      bedrooms: 2,
+      beds: 2,
+      bathrooms: 1,
+      propertyType: 'HOUSE',
+      privacyType: 'ENTIRE',
+      status: 'PUBLISHED',
+      ratingAvg: 4.5,
+      ratingCount: 10,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      promotions: [],
+      amenities: [{ amenityId: '1' }],
+      host: { id: 'h1', firstName: 'John', avatarUrl: 'avatar.jpg' },
+      reviews: [
+        {
+          id: 'r1',
+          score: 5,
+          message: 'Great',
+          profile: { id: 'p1', avatarUrl: 'p-avatar.jpg' },
+        },
+      ],
+      reservations: [
+        {
+          id: 'res1',
+          startDate: new Date(),
+          endDate: new Date(),
+        },
+      ],
+    };
+
+    it('should return mapped listing details from repository', async () => {
+      jest.spyOn(repository, 'findWithDetails').mockResolvedValue(mockListing);
 
       const result = await service.getListingDetails('1');
 
       expect(repository.findWithDetails).toHaveBeenCalledWith({ id: '1' });
-      expect(result).toBe(mockResult);
+      expect(result).toEqual({
+        id: '1',
+        title: 'Title',
+        description: 'Description',
+        nightPrice: 100,
+        images: ['img.jpg'],
+        location: {
+          city: 'City',
+          country: 'Country',
+          lat: 48.8566,
+          lng: 2.3522,
+          formatted: 'Formatted',
+          housenumber: '1',
+          street: 'Street',
+          state: 'State',
+          postcode: '123',
+          timezone: 'Timezone',
+        },
+        structure: {
+          bedrooms: 2,
+          beds: 2,
+          bathrooms: 1,
+          guests: 4,
+        },
+        guestLimits: {
+          adults: { min: 1, max: 4 },
+          children: { min: 0, max: 2 },
+          infant: { min: 0, max: 1 },
+          pets: { min: 0, max: 1 },
+        },
+        propertyType: 'HOUSE',
+        privacyType: 'ENTIRE',
+        status: 'PUBLISHED',
+        ratingAvg: 4.5,
+        ratingCount: 10,
+        createdAt: mockListing.createdAt,
+        updatedAt: mockListing.updatedAt,
+        promotions: [],
+        amenities: ['1'],
+        host: {
+          id: 'h1',
+          firstName: 'John',
+          avatarUrl: 'avatar.jpg',
+        },
+        reviews: [
+          {
+            id: 'r1',
+            userId: 'p1',
+            score: 5,
+            message: 'Great',
+            imageUrl: 'p-avatar.jpg',
+          },
+        ],
+        reservations: [
+          {
+            id: 'res1',
+            startDate: mockListing.reservations[0].startDate,
+            endDate: mockListing.reservations[0].endDate,
+          },
+        ],
+      });
+    });
+
+    it('should throw if the repository throws (e.g. not found or not published)', async () => {
+      jest
+        .spyOn(repository, 'findWithDetails')
+        .mockRejectedValue(new Error('Not Found'));
+
+      await expect(service.getListingDetails('1')).rejects.toThrow('Not Found');
     });
   });
 
   describe('getListingCheckout', () => {
     it('should return result from repository', async () => {
-      const mockResult = { id: '1' } as any;
+      const mockResult = { id: '1' } as unknown as ListingWithOptionalRelations;
       jest.spyOn(repository, 'findForCheckout').mockResolvedValue(mockResult);
 
       const result = await service.getListingCheckout('1');

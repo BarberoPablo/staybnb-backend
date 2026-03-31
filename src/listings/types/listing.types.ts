@@ -63,7 +63,7 @@ export type ListingWithOptionalRelations = Omit<Listing, 'location'> & {
   amenities?: ListingAmenity[];
   host?: Profile;
   reservations?: Reservation[];
-  reviews?: Array<Review & { imageUrl?: string }>;
+  reviews?: Array<Review & { profile: Profile; imageUrl?: string }>;
   _count?: {
     reservations?: number;
     favorites?: number;

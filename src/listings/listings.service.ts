@@ -91,8 +91,8 @@ export class ListingsService {
   }
 
   async getListingDetails(id: string): Promise<ListingDetailsResponseDto> {
-    const listings = await this.listingRepository.findWithDetails({ id });
-    return mapListingDetailsToResponse(listings);
+    const listing = await this.listingRepository.findWithDetails({ id });
+    return mapListingDetailsToResponse(listing);
   }
 
   async getListingCheckout(id: string): Promise<ListingWithOptionalRelations> {

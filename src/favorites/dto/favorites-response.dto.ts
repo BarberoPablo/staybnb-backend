@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ListingCardDto } from '@src/listings/dto/listing-card.dto';
 
 export class IsFavoriteResponseDto {
   @ApiProperty()

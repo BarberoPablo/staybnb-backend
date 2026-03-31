@@ -84,7 +84,7 @@ export function mapListingToResponse(
   }
 
   if (listing.reviews) {
-    response.reviews = listing.reviews.map((rev: any) => ({
+    response.reviews = listing.reviews.map((rev) => ({
       id: rev.id,
       score: rev.score,
       message: rev.message,

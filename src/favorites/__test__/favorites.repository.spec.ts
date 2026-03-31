@@ -111,7 +111,9 @@ describe('FavoritesRepository', () => {
           },
         },
       ];
-      jest.spyOn(prisma.favorite, 'findMany').mockResolvedValue(mockResult as any);
+      jest
+        .spyOn(prisma.favorite, 'findMany')
+        .mockResolvedValue(mockResult as any);
 
       const result = await repository.getFavorites('u1');
 
