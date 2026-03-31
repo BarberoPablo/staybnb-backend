@@ -102,7 +102,10 @@ export class ListingRepository {
     };
 
     const listing = await this.prisma.listing.findUniqueOrThrow({
-      where: { id: options.id },
+      where: {
+        id: options.id,
+        status: ListingStatus.PUBLISHED,
+      },
       include: {
         host: {
           select: {
@@ -150,7 +153,10 @@ export class ListingRepository {
     options: FindForCheckoutOptions,
   ): Promise<ListingWithOptionalRelations> {
     const listing = await this.prisma.listing.findUniqueOrThrow({
-      where: { id: options.id },
+      where: {
+        id: options.id,
+        status: ListingStatus.PUBLISHED,
+      },
     });
 
     return this.sanitizeListing(listing);

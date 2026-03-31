@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
-import { ListingStatus, Prisma } from '@prisma/client';
+import { Listing, ListingStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LISTING_CARD_SELECT,
@@ -199,6 +199,10 @@ describe('ListingRepository', () => {
         lat: 0,
         lng: 0,
         promotions: [],
+        amenities: [{ amenityId: '1' }],
+        host: { id: 'h1', firstName: 'John', avatarUrl: null },
+        reviews: [],
+        reservations: [],
       };
 
       const findUniqueSpy = jest
@@ -209,29 +213,65 @@ describe('ListingRepository', () => {
 
       expect(findUniqueSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: '1' },
+          where: {
+            id: '1',
+            status: ListingStatus.PUBLISHED,
+          },
           include: expect.objectContaining({
-            host: true,
-            amenities: true,
+            host: {
+              select: {
+                id: true,
+                firstName: true,
+                avatarUrl: true,
+              },
+            },
+            amenities: {
+              select: {
+                amenityId: true,
+              },
+            },
             reviews: expect.objectContaining({
-              include: { profile: true },
+              select: {
+                id: true,
+                score: true,
+                message: true,
+                profile: {
+                  select: {
+                    id: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+              take: 3,
+              orderBy: { createdAt: 'desc' },
             }),
             reservations: expect.objectContaining({
               where: expect.objectContaining({
                 status: 'UPCOMING',
+                endDate: { gte: expect.any(Date) },
               }),
+              select: {
+                id: true,
+                startDate: true,
+                endDate: true,
+              },
+              orderBy: { startDate: 'asc' },
             }),
           }),
         }),
       );
-      expect(result.id).toBe('1');
+      expect(result).toEqual(mockListing);
     });
   });
 
   describe('findForCheckout', () => {
     it('should return listing for checkout from prisma', async () => {
-      const mockListing: any = {
+      const mockListing = {
         id: '1',
+        title: 'Title',
+        description: 'Description',
+        nightPrice: 100,
+        images: ['img.jpg'],
         location: {
           formatted: 'Formatted',
           housenumber: '1',
@@ -245,7 +285,26 @@ describe('ListingRepository', () => {
         lat: 0,
         lng: 0,
         promotions: [],
-      };
+        maxGuests: 4,
+        maxAdults: 4,
+        maxChildren: 2,
+        maxInfants: 1,
+        maxPets: 1,
+        bedrooms: 2,
+        beds: 2,
+        bathrooms: 1,
+        propertyType: 'HOUSE',
+        privacyType: 'ENTIRE',
+        status: 'PUBLISHED',
+        ratingAvg: 4.5,
+        ratingCount: 10,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        checkInTime: '15:00',
+        checkOutTime: '11:00',
+        minCancelDays: 3,
+        hostId: 'h1',
+      } as unknown as Listing;
 
       const findUniqueSpy = jest
         .spyOn(prisma.listing, 'findUniqueOrThrow')
@@ -254,7 +313,10 @@ describe('ListingRepository', () => {
       const result = await repository.findForCheckout({ id: '1' });
 
       expect(findUniqueSpy).toHaveBeenCalledWith({
-        where: { id: '1' },
+        where: {
+          id: '1',
+          status: ListingStatus.PUBLISHED,
+        },
       });
       expect(result.id).toBe('1');
     });

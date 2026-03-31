@@ -91,7 +91,7 @@ describe('FavoritesService', () => {
           title: 'Title',
           images: [],
           nightPrice: 100,
-          location: null as any,
+          location: null,
           city: 'City',
           ratingAvg: 5,
           ratingCount: 1,

@@ -16,7 +16,7 @@ export function mapListingDetailsToResponse(
 
   const promotions = parsePromotionsFromDBToResponse(listing.promotions);
 
-  let response = {
+  const response: ListingDetailsResponseDto = {
     id: listing.id,
     title: listing.title,
     description: listing.description,
@@ -43,30 +43,24 @@ export function mapListingDetailsToResponse(
     ratingCount: listing.ratingCount,
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
-    amenities: listing.amenities?.map((amenity) => amenity.amenityId) ?? [],
-    ...(listing.host && {
-      host: {
-        id: listing.host.id,
-        firstName: listing.host.firstName,
-        avatarUrl: listing.host.avatarUrl ?? undefined,
-      },
-    }),
-    ...(listing.reviews && {
-      reviews: listing.reviews.map((review) => ({
-        id: review.id,
-        userId: review.profile.id,
-        score: review.score,
-        message: review.message,
-        imageUrl: review.profile.avatarUrl || undefined,
-      })),
-    }),
-    ...(listing.reservations && {
-      reservations: listing.reservations.map((res) => ({
-        id: res.id,
-        startDate: res.startDate,
-        endDate: res.endDate,
-      })),
-    }),
+    amenities: listing.amenities.map((amenity) => amenity.amenityId),
+    host: {
+      id: listing.host.id,
+      firstName: listing.host.firstName,
+      avatarUrl: listing.host.avatarUrl ?? undefined,
+    },
+    reviews: listing.reviews.map((review) => ({
+      id: review.id,
+      userId: review.profile.id,
+      score: review.score,
+      message: review.message,
+      imageUrl: review.profile.avatarUrl ?? undefined,
+    })),
+    reservations: listing.reservations.map((res) => ({
+      id: res.id,
+      startDate: res.startDate,
+      endDate: res.endDate,
+    })),
   };
 
   return response;
