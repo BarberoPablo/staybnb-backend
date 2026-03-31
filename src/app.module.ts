@@ -8,6 +8,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { CitiesModule } from './cities/cities.module';
 import { EmailModule } from './email/email.module';
+import { FavoritesModule } from './favorites/favorites.module';
 import { HealthModule } from './health/health.module';
 import { DraftListingsModule } from './host/draft-listings/draft-listings.module';
 import { HostListingsModule } from './host/listings/host-listings.module';
@@ -41,6 +42,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     EmailModule,
     CitiesModule,
     AmenitiesModule,
+    FavoritesModule,
   ],
   providers: [
     {
