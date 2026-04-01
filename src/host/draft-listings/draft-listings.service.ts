@@ -3,27 +3,23 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DraftListing as PrismaDraftListing } from '@prisma/client';
 import { AmenitiesRepository } from '@src/amenities/repositories/amenities.repository';
-import { PrismaService } from '@src/prisma/prisma.service';
 import { completedDraftListingTemplate } from './draft-listing.utils';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
+import { DraftListing } from './dto/draft-listing.types';
 import { DraftListingsRepository } from './repositories/draft-listings.repository';
 import { validateDraftForCompletion } from './validation/validate-complete-draft';
 
 @Injectable()
 export class DraftListingsService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly draftListingsRepository: DraftListingsRepository,
     private readonly amenitiesRepository: AmenitiesRepository,
   ) {}
 
-  create(hostId: string): Promise<PrismaDraftListing> {
-    return this.prisma.draftListing.create({
-      data: { hostId },
-    });
+  create(hostId: string): Promise<DraftListing> {
+    return this.draftListingsRepository.create(hostId);
   }
 
   async complete(
@@ -48,17 +44,12 @@ export class DraftListingsService {
     return this.draftListingsRepository.publishDraft(draft);
   }
 
-  findAll(hostId: string): Promise<PrismaDraftListing[]> {
-    return this.prisma.draftListing.findMany({
-      where: { hostId },
-      orderBy: { updatedAt: 'desc' },
-    });
+  findAll(hostId: string): Promise<DraftListing[]> {
+    return this.draftListingsRepository.findAll(hostId);
   }
 
-  async find(hostId: string, id: string): Promise<PrismaDraftListing> {
-    const draft = await this.prisma.draftListing.findFirst({
-      where: { id, hostId },
-    });
+  async find(hostId: string, id: string): Promise<DraftListing> {
+    const draft = await this.draftListingsRepository.findById(hostId, id);
 
     if (!draft) {
       throw new NotFoundException('Draft listing not found');
@@ -79,10 +70,7 @@ export class DraftListingsService {
       throw new BadRequestException('Invalid step');
     }
 
-    const draft = await this.prisma.draftListing.findFirst({
-      where: { id: draftId, hostId },
-      select: { visitedSteps: true },
-    });
+    const draft = await this.draftListingsRepository.findById(hostId, draftId);
 
     if (!draft) {
       throw new NotFoundException('Draft listing not found');
@@ -92,48 +80,36 @@ export class DraftListingsService {
       ? draft.visitedSteps
       : [...draft.visitedSteps, step];
 
-    await this.prisma.draftListing.update({
-      where: { id: draftId, hostId },
-      data: {
-        ...dto,
-        currentStep: step,
-        visitedSteps: {
-          set: visitedSteps,
-        },
+    await this.draftListingsRepository.update(hostId, draftId, {
+      ...dto,
+      currentStep: step,
+      visitedSteps: {
+        set: visitedSteps,
       },
     });
   }
 
-  async autoComplete(draftId: string, hostId: string) {
-    const draft = await this.prisma.draftListing.findFirst({
-      where: { id: draftId, hostId },
-    });
+  async autoComplete(draftId: string, hostId: string): Promise<void> {
+    const draft = await this.draftListingsRepository.findById(hostId, draftId);
 
     if (!draft) {
       throw new NotFoundException('Draft listing not found');
     }
 
-    await this.prisma.draftListing.update({
-      where: { id: draftId, hostId },
-      data: {
-        ...completedDraftListingTemplate,
-      },
-    });
-
-    return { success: true };
+    await this.draftListingsRepository.update(
+      hostId,
+      draftId,
+      completedDraftListingTemplate,
+    );
   }
 
   async remove(hostId: string, draftId: string): Promise<void> {
-    const draft = await this.prisma.draftListing.findFirst({
-      where: { id: draftId, hostId },
-    });
+    const draft = await this.draftListingsRepository.findById(hostId, draftId);
 
     if (!draft) {
       throw new NotFoundException('Draft listing not found');
     }
 
-    await this.prisma.draftListing.delete({
-      where: { id: draftId },
-    });
+    await this.draftListingsRepository.delete(hostId, draftId);
   }
 }

@@ -1,6 +1,7 @@
+import { Prisma } from '@prisma/client';
 import { privacyTypes, propertyTypes } from '@src/listings/types/listing.types';
 
-export const completedDraftListingTemplate = {
+export const completedDraftListingTemplate: Prisma.DraftListingUpdateInput = {
   title: 'My Awesome Listing',
   description: 'A wonderful place to stay.',
   nightPrice: 100,
@@ -28,7 +29,7 @@ export const completedDraftListingTemplate = {
       discountPercentage: 10,
       description: 'Stay 10 nights or more and get 10% off!',
     },
-  ],
+  ] as Prisma.InputJsonValue,
   beds: 3,
   bedrooms: 1,
   bathrooms: 1,
@@ -51,7 +52,7 @@ export const completedDraftListingTemplate = {
     formatted:
       '1753, Anchorena, Tomas Manuel De, Dr., Buenos Aires, Autonomous City of Buenos Aires, CF C1119ACO, Argentina',
     housenumber: '1753',
-  },
+  } as Prisma.InputJsonValue,
   checkInTime: '15:00',
   checkOutTime: '11:00',
   minCancelDays: 3,
