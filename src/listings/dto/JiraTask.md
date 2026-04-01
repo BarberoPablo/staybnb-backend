@@ -1,52 +1,16 @@
-Title: "Feat: Create GET /listings/featured endpoint with ranking and pagination"
-
-Description:
-Implement a dedicated endpoint to return featured listings for the homepage. This endpoint must be independent from search and optimized for system-driven discovery. It should support limit-based pagination and apply the existing featured ranking logic.
-
-The endpoint must only return published listings and include the required aggregates (favorites and reservations count). The goal is to provide a clean, cache-friendly contract that the frontend can consume via parallel requests.
-
-Requirements
-
-Create route: GET /listings/featured
-
-Support query params:
-
-limit (default: 12, max capped)
-
-offset (default: 0)
-
-Filter:
-
-status = published
-
-minimum rating threshold (current featured rule)
-
-Apply featured ranking algorithm (existing sortByFeatured)
-
-Include counts:
-
-favorites
-
-reservations
-
-Return parsed domain entity (via existing mapper)
-
-Add input validation for query params
-
-Add basic error handling
-
-Prepare for HTTP caching (no-store for now, but structure ready)
-
-Acceptance Criteria
-
-Endpoint returns only published listings
-
-Pagination works correctly
-
-Ranking is applied consistently
-
-Response shape matches frontend expectations
-
-No coupling with search endpoint
-
-Code follows module boundaries and is testable
+1. If there is no city, empty array should be returned and city center with null.
+2. I dont want to filter by country, only city, so I removed country from a possible query option.
+3. "Includes" properties are not necessary in this search, they will be more usefull in the "findById" service, because in the search I am returning a lot of listings and I want to avoid returning data that is not going to be used, so I changed the returned in the search, the type of the return is going to be the already existed type called "ListingCardDto" instead of "ListingResponseDto".4
+4. Should I create a reusable const for the "select" in the listing repository functions that returns a type of "ListingCardDto"? To reuse this structure:
+   select: {
+   id: true,
+   title: true,
+   nightPrice: true,
+   images: true,
+   ratingAvg: true,
+   propertyType: true,
+   privacyType: true,
+   city: true,
+   country: true,
+   location: true,
+   }
