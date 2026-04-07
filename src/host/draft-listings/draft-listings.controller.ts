@@ -11,7 +11,7 @@ import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
 import { DraftListingsService } from './draft-listings.service';
 import {
-  DraftListingPublishResponseDto,
+  SuccessWithListingIdResponseDto,
   DraftListingResponseDto,
   SuccessResponseDto,
 } from './dto/draft-listing-response.dto';
@@ -47,22 +47,21 @@ export class DraftListingsController {
     return mapDraftListingDbToResponse(draft);
   }
 
-  @ApiOkResponse({ type: DraftListingResponseDto })
+  @ApiOkResponse({ type: SuccessWithListingIdResponseDto })
   @Post()
   async create(
     @CurrentUser() user: AuthUser,
-  ): Promise<DraftListingResponseDto> {
+  ): Promise<SuccessWithListingIdResponseDto> {
     const hostId = user.id;
-    const draft = await this.service.create(hostId);
-    return mapDraftListingDbToResponse(draft);
+    return this.service.create(hostId);
   }
 
-  @ApiOkResponse({ type: DraftListingPublishResponseDto })
+  @ApiOkResponse({ type: SuccessWithListingIdResponseDto })
   @Post(':id/publish')
   async complete(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
-  ): Promise<DraftListingPublishResponseDto> {
+  ): Promise<SuccessWithListingIdResponseDto> {
     const { listingId } = await this.service.complete(user.id, id.trim());
     return { success: true, listingId };
   }

@@ -112,7 +112,7 @@ model DraftListing {
   maxGuests   Int @default(2)
 
   // Location
-  location Json @default("{}")
+  location Json @default("{\"country\": \"\", \"city\": \"\", \"lat\": 0, \"lng\": 0, \"formatted\": \"\", \"housenumber\": \"\", \"street\": \"\", \"state\": \"\", \"postcode\": \"\", \"timezone\": \"\"}")
 
   // Rules
   checkInTime   String @default("15:00")

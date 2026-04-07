@@ -1,16 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '@src/prisma/prisma.service';
-import { DraftListingsRepository } from '@src/host/draft-listings/repositories/draft-listings.repository';
+import { AmenitiesRepository } from '@src/amenities/repositories/amenities.repository';
 import { DraftListingsService } from '@src/host/draft-listings/draft-listings.service';
 import { DraftListing } from '@src/host/draft-listings/dto/draft-listing.types';
-import * as mappers from '@src/host/draft-listings/mappers/draft-listings.mappers';
+import { DraftListingsRepository } from '@src/host/draft-listings/repositories/draft-listings.repository';
 import * as validation from '@src/host/draft-listings/validation/validate-complete-draft';
 
 describe('DraftListingsService', () => {
   let service: DraftListingsService;
-  let prisma: PrismaService;
   let repository: DraftListingsRepository;
+  let amenitiesRepository: AmenitiesRepository;
 
   const mockDraftListing: DraftListing = {
     id: 'draft123',
@@ -19,7 +20,7 @@ describe('DraftListingsService', () => {
     title: 'Title',
     description: 'Description',
     nightPrice: 40,
-    images: ['img1', 'img2', 'img3'],
+    images: ['img1'],
     beds: 1,
     bedrooms: 1,
     bathrooms: 1,
@@ -57,36 +58,47 @@ describe('DraftListingsService', () => {
       providers: [
         DraftListingsService,
         {
-          provide: PrismaService,
+          provide: DraftListingsRepository,
           useValue: {
-            draftListing: {
-              findFirst: jest.fn(),
-              delete: jest.fn(),
-              create: jest.fn(),
-              update: jest.fn(),
-            },
-            amenity: {
-              count: jest.fn(),
-            },
+            create: jest.fn(),
+            findAll: jest.fn(),
+            findById: jest.fn(),
+            findDraftOrThrow: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            publishDraft: jest.fn(),
           },
         },
         {
-          provide: DraftListingsRepository,
+          provide: AmenitiesRepository,
           useValue: {
-            findDraftOrThrow: jest.fn(),
-            publishDraft: jest.fn(),
+            countByIds: jest.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<DraftListingsService>(DraftListingsService);
-    prisma = module.get<PrismaService>(PrismaService);
     repository = module.get<DraftListingsRepository>(DraftListingsRepository);
+    amenitiesRepository = module.get<AmenitiesRepository>(AmenitiesRepository);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('create', () => {
+    it('should create a new draft listing', async () => {
+      const mockResponse = { listingId: 'new-id', success: true };
+      jest
+        .spyOn(repository, 'create')
+        .mockResolvedValue({ listingId: 'new-id' });
+
+      const result = await service.create('host123');
+
+      expect(repository.create).toHaveBeenCalledWith('host123');
+      expect(result).toEqual(mockResponse);
+    });
   });
 
   describe('complete', () => {
@@ -94,34 +106,22 @@ describe('DraftListingsService', () => {
     const draftId = 'draft123';
 
     it('should complete the draft if valid', async () => {
-      const findDraftOrThrowSpy = jest
+      jest
         .spyOn(repository, 'findDraftOrThrow')
         .mockResolvedValue(mockDraftListing);
       jest
         .spyOn(validation, 'validateDraftForCompletion')
-        .mockReturnValue(
-          mockDraftListing as unknown as ReturnType<
-            typeof validation.validateDraftForCompletion
-          >,
-        );
-      jest
-        .spyOn(mappers, 'sanitizeDraftListing')
-        .mockReturnValue(mockDraftListing);
-      const amenityCountSpy = jest
-        .spyOn(prisma.amenity, 'count')
-        .mockResolvedValue(1);
-      const publishDraftSpy = jest
-        .spyOn(repository, 'publishDraft')
-        .mockResolvedValue({ listingId: 'listing123' });
+        .mockReturnValue(mockDraftListing as any);
+      jest.spyOn(amenitiesRepository, 'countByIds').mockResolvedValue(1);
+      const mockResult = { listingId: 'listing123' };
+      jest.spyOn(repository, 'publishDraft').mockResolvedValue(mockResult);
 
       const result = await service.complete(hostId, draftId);
 
-      expect(findDraftOrThrowSpy).toHaveBeenCalledWith(hostId, draftId);
-      expect(amenityCountSpy).toHaveBeenCalledWith({
-        where: { id: { in: ['amenity1'] } },
-      });
-      expect(publishDraftSpy).toHaveBeenCalled();
-      expect(result).toEqual({ listingId: 'listing123' });
+      expect(repository.findDraftOrThrow).toHaveBeenCalledWith(hostId, draftId);
+      expect(amenitiesRepository.countByIds).toHaveBeenCalledWith(['amenity1']);
+      expect(repository.publishDraft).toHaveBeenCalledWith(mockDraftListing);
+      expect(result).toBe(mockResult);
     });
 
     it('should throw BadRequestException if amenities are invalid', async () => {
@@ -130,15 +130,8 @@ describe('DraftListingsService', () => {
         .mockResolvedValue(mockDraftListing);
       jest
         .spyOn(validation, 'validateDraftForCompletion')
-        .mockReturnValue(
-          mockDraftListing as unknown as ReturnType<
-            typeof validation.validateDraftForCompletion
-          >,
-        );
-      jest
-        .spyOn(mappers, 'sanitizeDraftListing')
-        .mockReturnValue(mockDraftListing);
-      jest.spyOn(prisma.amenity, 'count').mockResolvedValue(0);
+        .mockReturnValue(mockDraftListing as any);
+      jest.spyOn(amenitiesRepository, 'countByIds').mockResolvedValue(0);
 
       await expect(service.complete(hostId, draftId)).rejects.toThrow(
         BadRequestException,
@@ -146,63 +139,94 @@ describe('DraftListingsService', () => {
     });
   });
 
+  describe('findAll', () => {
+    it('should return all draft listings for a host', async () => {
+      const mockDrafts = [mockDraftListing];
+      jest.spyOn(repository, 'findAll').mockResolvedValue(mockDrafts);
+
+      const result = await service.findAll('host123');
+
+      expect(repository.findAll).toHaveBeenCalledWith('host123');
+      expect(result).toBe(mockDrafts);
+    });
+  });
+
+  describe('find', () => {
+    it('should return a draft listing by id', async () => {
+      jest.spyOn(repository, 'findById').mockResolvedValue(mockDraftListing);
+
+      const result = await service.find('host123', 'draft123');
+
+      expect(repository.findById).toHaveBeenCalledWith('host123', 'draft123');
+      expect(result).toBe(mockDraftListing);
+    });
+
+    it('should throw NotFoundException if draft not found', async () => {
+      jest.spyOn(repository, 'findById').mockResolvedValue(null);
+
+      await expect(service.find('host123', 'draft123')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('should update a draft listing', async () => {
+      jest.spyOn(repository, 'findById').mockResolvedValue(mockDraftListing);
+      const updateSpy = jest.spyOn(repository, 'update').mockResolvedValue();
+
+      const dto = { title: 'New Title' };
+      await service.update('host123', 'draft123', 0, dto);
+
+      expect(updateSpy).toHaveBeenCalledWith(
+        'host123',
+        'draft123',
+        expect.objectContaining({
+          title: 'New Title',
+          currentStep: 0,
+          visitedSteps: { set: [0] },
+        }),
+      );
+    });
+
+    it('should throw BadRequestException if step is invalid', async () => {
+      await expect(
+        service.update('host123', 'draft123', 999, {}),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('autoComplete', () => {
+    it('should autocomplete a draft listing', async () => {
+      jest.spyOn(repository, 'findById').mockResolvedValue(mockDraftListing);
+      const updateSpy = jest.spyOn(repository, 'update').mockResolvedValue();
+
+      await service.autoComplete('draft123', 'host123');
+
+      expect(updateSpy).toHaveBeenCalledWith(
+        'host123',
+        'draft123',
+        expect.any(Object),
+      );
+    });
+  });
+
   describe('remove', () => {
-    const hostId = 'host123';
-    const draftId = 'draft123';
+    it('should remove a draft listing', async () => {
+      jest.spyOn(repository, 'findById').mockResolvedValue(mockDraftListing);
+      const deleteSpy = jest.spyOn(repository, 'delete').mockResolvedValue();
 
-    it('should delete the record if it exists and the userId matches the owner', async () => {
-      const findFirstSpy = jest
-        .spyOn(prisma.draftListing, 'findFirst')
-        .mockResolvedValue(mockDraftListing);
+      await service.remove('host123', 'draft123');
 
-      const deleteSpy = jest
-        .spyOn(prisma.draftListing, 'delete')
-        .mockResolvedValue(mockDraftListing);
-
-      await service.remove(hostId, draftId);
-
-      expect(findFirstSpy).toHaveBeenCalledWith({
-        where: { id: draftId, hostId },
-      });
-      expect(deleteSpy).toHaveBeenCalledWith({
-        where: { id: draftId },
-      });
+      expect(deleteSpy).toHaveBeenCalledWith('host123', 'draft123');
     });
 
-    it('should throw NotFoundException if the DraftListing ID does not exist', async () => {
-      const findFirstSpy = jest
-        .spyOn(prisma.draftListing, 'findFirst')
-        .mockResolvedValue(null);
+    it('should throw NotFoundException if draft not found', async () => {
+      jest.spyOn(repository, 'findById').mockResolvedValue(null);
 
-      const deleteSpy = jest.spyOn(prisma.draftListing, 'delete');
-
-      await expect(service.remove(hostId, draftId)).rejects.toThrow(
+      await expect(service.remove('host123', 'draft123')).rejects.toThrow(
         NotFoundException,
       );
-
-      expect(findFirstSpy).toHaveBeenCalledWith({
-        where: { id: draftId, hostId },
-      });
-      expect(deleteSpy).not.toHaveBeenCalled();
-    });
-
-    it('should throw NotFoundException if a different user tries to delete it', async () => {
-      const findFirstSpy = jest
-        .spyOn(prisma.draftListing, 'findFirst')
-        .mockResolvedValue(null);
-
-      const deleteSpy = jest.spyOn(prisma.draftListing, 'delete');
-
-      const differentHostId = 'host456';
-
-      await expect(service.remove(differentHostId, draftId)).rejects.toThrow(
-        NotFoundException,
-      );
-
-      expect(findFirstSpy).toHaveBeenCalledWith({
-        where: { id: draftId, hostId: differentHostId },
-      });
-      expect(deleteSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -11,11 +11,11 @@ import {
 export class DraftListingsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(hostId: string): Promise<DraftListing> {
-    const draft = await this.prisma.draftListing.create({
+  async create(hostId: string): Promise<{ listingId: string }> {
+    const { id } = await this.prisma.draftListing.create({
       data: { hostId },
     });
-    return sanitizeDraftListing(draft);
+    return { listingId: id };
   }
 
   async findAll(hostId: string): Promise<DraftListing[]> {
