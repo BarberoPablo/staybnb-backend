@@ -74,7 +74,7 @@ export class SuccessResponseDto {
   success: boolean;
 }
 
-export class DraftListingPublishResponseDto {
+export class SuccessWithListingIdResponseDto {
   @ApiProperty()
   success: boolean;
 

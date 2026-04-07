@@ -6,6 +6,7 @@ import {
 import { AmenitiesRepository } from '@src/amenities/repositories/amenities.repository';
 import { completedDraftListingTemplate } from './draft-listing.utils';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
+import { SuccessWithListingIdResponseDto } from './dto/draft-listing-response.dto';
 import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
 import { DraftListing } from './dto/draft-listing.types';
 import { DraftListingsRepository } from './repositories/draft-listings.repository';
@@ -18,8 +19,9 @@ export class DraftListingsService {
     private readonly amenitiesRepository: AmenitiesRepository,
   ) {}
 
-  create(hostId: string): Promise<DraftListing> {
-    return this.draftListingsRepository.create(hostId);
+  async create(hostId: string): Promise<SuccessWithListingIdResponseDto> {
+    const { listingId } = await this.draftListingsRepository.create(hostId);
+    return { listingId, success: true };
   }
 
   async complete(

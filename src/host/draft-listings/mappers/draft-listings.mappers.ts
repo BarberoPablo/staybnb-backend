@@ -7,6 +7,25 @@ import {
 import { DraftListingResponseDto } from '../dto/draft-listing-response.dto';
 import { DraftListing } from '../dto/draft-listing.types';
 
+export function mapLocationDbToResponse(
+  location: unknown,
+): ListingLocationResponse {
+  const loc = (location as any) || {};
+
+  return {
+    country: loc.country || '',
+    city: loc.city || '',
+    lat: loc.lat ?? 0,
+    lng: loc.lng ?? 0,
+    formatted: loc.formatted || '',
+    housenumber: loc.housenumber || '',
+    street: loc.street || '',
+    state: loc.state || '',
+    postcode: loc.postcode || '',
+    timezone: loc.timezone || '',
+  };
+}
+
 export function mapDraftListingDbToResponse(
   draft: PrismaDraftListing,
 ): DraftListingResponseDto {
@@ -30,7 +49,7 @@ export function mapDraftListingDbToResponse(
     hostId: draft.hostId,
     propertyType: draft.propertyType,
     privacyType: draft.privacyType,
-    location: draft.location as ListingLocationResponse,
+    location: mapLocationDbToResponse(draft.location),
     checkInTime: draft.checkInTime,
     checkOutTime: draft.checkOutTime,
     title: draft.title,
@@ -52,37 +71,10 @@ export function mapDraftListingDbToResponse(
 export function sanitizeDraftListing(
   listing: Prisma.DraftListingGetPayload<any>,
 ): DraftListing {
-  assertDraftListingLocation(listing.location);
-
   return {
     ...listing,
-    location: listing.location,
+    location: mapLocationDbToResponse(listing.location),
   };
-}
-
-export function assertDraftListingLocation(
-  location: unknown,
-): asserts location is ListingLocationResponse {
-  if (!location || typeof location !== 'object')
-    throw new Error('Invalid draft listing location shape');
-
-  const loc = location as Record<string, unknown>;
-
-  if (
-    !(
-      typeof loc.country === 'string' &&
-      typeof loc.city === 'string' &&
-      typeof loc.lat === 'number' &&
-      typeof loc.lng === 'number' &&
-      typeof loc.formatted === 'string' &&
-      typeof loc.housenumber === 'string' &&
-      typeof loc.street === 'string' &&
-      typeof loc.state === 'string' &&
-      typeof loc.postcode === 'string' &&
-      typeof loc.timezone === 'string'
-    )
-  )
-    throw new Error('Invalid draft listing location shape');
 }
 
 /**
