@@ -7,17 +7,17 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
 import { DraftListingsService } from './draft-listings.service';
 import {
-  SuccessWithListingIdResponseDto,
   DraftListingResponseDto,
   SuccessResponseDto,
+  SuccessWithListingIdResponseDto,
 } from './dto/draft-listing-response.dto';
-import { PatchDraftListingBodyDto } from './dto/draft-listing-update.dto';
+import { PartialUpdateDraftListingDto } from './dto/draft-listing-update.dto';
 import { mapDraftListingDbToResponse } from './mappers/draft-listings.mappers';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Host / Draft Listings')
 @Controller('host/draft-listings')
@@ -71,9 +71,9 @@ export class DraftListingsController {
   async update(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-    @Body() body: PatchDraftListingBodyDto,
+    @Body() body: PartialUpdateDraftListingDto,
   ): Promise<SuccessResponseDto> {
-    await this.service.update(user.id, id, body.step, body.data);
+    await this.service.update(user.id, id, body);
     return { success: true };
   }
 
