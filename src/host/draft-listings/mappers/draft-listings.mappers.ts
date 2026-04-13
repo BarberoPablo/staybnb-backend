@@ -5,6 +5,7 @@ import {
   ListingLocationResponse,
 } from '@src/listings/types/listing.types';
 import { DraftListingResponseDto } from '../dto/draft-listing-response.dto';
+import { PartialUpdateDraftListingDto } from '../dto/draft-listing-update.dto';
 import { DraftListing } from '../dto/draft-listing.types';
 
 export function mapLocationDbToResponse(
@@ -153,5 +154,38 @@ export function mapDraftToListing(
 
     propertyType: draft.propertyType,
     privacyType: draft.privacyType,
+  };
+}
+
+export function mapDraftToListingUpdate(
+  data: PartialUpdateDraftListingDto,
+  visitedSteps: number[],
+): Prisma.DraftListingUpdateInput {
+  const updatedVisitedSteps = visitedSteps.includes(data.currentStep)
+    ? visitedSteps
+    : [...visitedSteps, data.currentStep];
+
+  return {
+    amenities: data.amenities,
+    images: data.images,
+    title: data.title,
+    description: data.description,
+    nightPrice: data.nightPrice,
+    checkInTime: data.checkInTime,
+    checkOutTime: data.checkOutTime,
+    minCancelDays: data.minCancelDays,
+    visitedSteps: updatedVisitedSteps,
+    propertyType: data.propertyType,
+    privacyType: data.privacyType,
+    promotions: data.promotions,
+    location: data.location,
+    bedrooms: data.structure?.bedrooms,
+    beds: data.structure?.beds,
+    bathrooms: data.structure?.bathrooms,
+    maxGuests: data.structure?.guests,
+    maxAdults: data.guestLimits?.adults.max,
+    maxChildren: data.guestLimits?.children.max,
+    maxInfants: data.guestLimits?.infant.max,
+    maxPets: data.guestLimits?.pets.max,
   };
 }

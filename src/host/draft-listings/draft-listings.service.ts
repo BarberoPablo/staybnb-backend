@@ -7,8 +7,9 @@ import { AmenitiesRepository } from '@src/amenities/repositories/amenities.repos
 import { completedDraftListingTemplate } from './draft-listing.utils';
 import { DRAFT_LISTING_STEP_FIELDS } from './draft-listings.steps';
 import { SuccessWithListingIdResponseDto } from './dto/draft-listing-response.dto';
-import { UpdateDraftListingDto } from './dto/draft-listing-update.dto';
+import { PartialUpdateDraftListingDto } from './dto/draft-listing-update.dto';
 import { DraftListing } from './dto/draft-listing.types';
+import { mapDraftToListingUpdate } from './mappers/draft-listings.mappers';
 import { DraftListingsRepository } from './repositories/draft-listings.repository';
 import { validateDraftForCompletion } from './validation/validate-complete-draft';
 
@@ -63,10 +64,9 @@ export class DraftListingsService {
   async update(
     hostId: string,
     draftId: string,
-    step: number,
-    dto: UpdateDraftListingDto,
+    dto: PartialUpdateDraftListingDto,
   ): Promise<void> {
-    const allowedFields = DRAFT_LISTING_STEP_FIELDS[step];
+    const allowedFields = DRAFT_LISTING_STEP_FIELDS[dto.currentStep];
 
     if (!allowedFields) {
       throw new BadRequestException('Invalid step');
@@ -78,17 +78,9 @@ export class DraftListingsService {
       throw new NotFoundException('Draft listing not found');
     }
 
-    const visitedSteps = draft.visitedSteps.includes(step)
-      ? draft.visitedSteps
-      : [...draft.visitedSteps, step];
+    const parsedData = mapDraftToListingUpdate(dto, draft.visitedSteps);
 
-    await this.draftListingsRepository.update(hostId, draftId, {
-      ...dto,
-      currentStep: step,
-      visitedSteps: {
-        set: visitedSteps,
-      },
-    });
+    await this.draftListingsRepository.update(hostId, draftId, parsedData);
   }
 
   async autoComplete(draftId: string, hostId: string): Promise<void> {

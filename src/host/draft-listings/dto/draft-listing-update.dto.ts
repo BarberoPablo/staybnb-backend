@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { PrivacyType, PropertyType } from '@prisma/client';
 import {
   ListingGuestLimitsDto,
@@ -12,45 +12,42 @@ import type {
   ListingLocationResponse,
   Promotion,
 } from '@src/listings/types/listing.types';
-import { IsInt, IsObject, Min } from 'class-validator';
+import { IsInt, Min } from 'class-validator';
 
 //Domain dto
 export class UpdateDraftListingDto {
-  @ApiPropertyOptional({ type: [String] })
-  amenities?: string[];
+  @ApiProperty({ type: [String] })
+  amenities: string[];
 
-  @ApiPropertyOptional({ type: [String] })
-  images?: string[];
+  @ApiProperty({ type: [String] })
+  images: string[];
 
-  @ApiPropertyOptional()
-  title?: string;
+  @ApiProperty()
+  title: string;
 
-  @ApiPropertyOptional()
-  description?: string;
+  @ApiProperty()
+  description: string;
 
-  @ApiPropertyOptional()
-  nightPrice?: number;
+  @ApiProperty()
+  nightPrice: number;
 
-  @ApiPropertyOptional()
-  checkInTime?: string;
+  @ApiProperty()
+  checkInTime: string;
 
-  @ApiPropertyOptional()
-  checkOutTime?: string;
+  @ApiProperty()
+  checkOutTime: string;
 
-  @ApiPropertyOptional()
-  minCancelDays?: number;
+  @ApiProperty()
+  minCancelDays: number;
 
-  @ApiPropertyOptional()
-  currentStep?: number;
+  @ApiProperty({ type: [Number] })
+  visitedSteps: number[];
 
-  @ApiPropertyOptional({ type: [Number] })
-  visitedSteps?: number[];
+  @ApiProperty({ enum: PropertyType })
+  propertyType: PropertyType;
 
-  @ApiPropertyOptional({ enum: PropertyType })
-  propertyType?: PropertyType;
-
-  @ApiPropertyOptional({ enum: PrivacyType })
-  privacyType?: PrivacyType;
+  @ApiProperty({ enum: PrivacyType })
+  privacyType: PrivacyType;
 
   /**
    * We use Swagger Classes for API documentation and Validation,
@@ -58,27 +55,25 @@ export class UpdateDraftListingDto {
    * with Prisma's JSON field requirements (Plain Objects vs Classes).
    */
 
-  @ApiPropertyOptional({ type: [ListingPromotionDto] })
-  promotions?: Promotion[];
+  @ApiProperty({ type: [ListingPromotionDto] })
+  promotions: Promotion[];
 
-  @ApiPropertyOptional({ type: ListingLocationDto })
-  location?: ListingLocationResponse;
+  @ApiProperty({ type: ListingLocationDto })
+  location: ListingLocationResponse;
 
-  @ApiPropertyOptional({ type: ListingStructureDto })
-  structure?: DraftListingStructure;
+  @ApiProperty({ type: ListingStructureDto })
+  structure: DraftListingStructure;
 
-  @ApiPropertyOptional({ type: ListingGuestLimitsDto })
-  guestLimits?: GuestLimits;
+  @ApiProperty({ type: ListingGuestLimitsDto })
+  guestLimits: GuestLimits;
 }
 
-//DTO for handler (Boundary DTO, Input DTO)
-export class PatchDraftListingBodyDto {
+// All props are optional except for currentStep. currentStep is inside the same structure, it is not a separated prop
+export class PartialUpdateDraftListingDto extends PartialType(
+  UpdateDraftListingDto,
+) {
   @ApiProperty()
   @IsInt()
   @Min(0)
-  step: number;
-
-  @ApiProperty({ type: UpdateDraftListingDto })
-  @IsObject()
-  data: UpdateDraftListingDto;
+  currentStep: number;
 }
