@@ -1,7 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Listing, ListingStatus } from '@prisma/client';
 import { mapHostListingToResponse } from '@src/host/listings/mappers/host-listings.mapper';
-import { ListingResponseDto } from '@src/listings/dto/listing-response.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { HostListingResponseDto } from '../dto/host-listings.dto';
 
@@ -18,7 +17,8 @@ export class HostListingRepository {
         images: true,
         title: true,
         description: true,
-        location: true,
+        city: true,
+        country: true,
         nightPrice: true,
         propertyType: true,
         privacyType: true,

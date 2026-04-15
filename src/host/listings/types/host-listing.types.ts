@@ -7,7 +7,8 @@ export type PrismaHostListing = Prisma.ListingGetPayload<{
     images: true;
     title: true;
     description: true;
-    location: true;
+    city: true;
+    country: true;
     nightPrice: true;
     propertyType: true;
     privacyType: true;

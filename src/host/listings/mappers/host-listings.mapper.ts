@@ -1,14 +1,9 @@
 import { HostListingResponseDto } from '../dto/host-listings.dto';
-import {
-  HostListingLocation,
-  PrismaHostListing,
-} from '../types/host-listing.types';
+import { PrismaHostListing } from '../types/host-listing.types';
 
 export function mapHostListingToResponse(
   listing: PrismaHostListing,
 ): HostListingResponseDto {
-  const location = listing.location as HostListingLocation;
-
   return {
     id: listing.id,
     status: listing.status,
@@ -16,8 +11,8 @@ export function mapHostListingToResponse(
     title: listing.title,
     description: listing.description,
     location: {
-      city: location.city,
-      country: location.country,
+      city: listing.city,
+      country: listing.country,
     },
     nightPrice: listing.nightPrice,
     propertyType: listing.propertyType,
