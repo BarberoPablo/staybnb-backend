@@ -1,7 +1,7 @@
 import { Prisma, DraftListing as PrismaDraftListing } from '@prisma/client';
 import { parsePromotionsFromDBToResponse } from '@src/listings/mappers/listings.mapper';
 import {
-  ListingLocation,
+  ListingLocationFromDB,
   ListingLocationResponse,
 } from '@src/listings/types/listing.types';
 import { DraftListingResponseDto } from '../dto/draft-listing-response.dto';
@@ -38,6 +38,7 @@ export function mapDraftListingDbToResponse(
     bathrooms: draft.bathrooms,
     guests: draft.maxGuests,
   };
+
   const guestLimits = {
     adults: { min: 1, max: draft.maxAdults },
     children: { min: 0, max: draft.maxChildren },
@@ -92,7 +93,7 @@ export function parseLocationFromDBToResponse(
     throw new Error('Invalid location');
   }
 
-  const loc = location as ListingLocation;
+  const loc = location as ListingLocationFromDB;
 
   return {
     country,

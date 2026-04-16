@@ -7,8 +7,7 @@ import {
   ListingResponseDto,
 } from '../dto/listing-response.dto';
 import {
-  HomeListingLocation,
-  ListingLocation,
+  ListingLocationFromDB,
   ListingWithOptionalRelations,
   PrismaFeaturedListing,
   Promotion,
@@ -142,7 +141,7 @@ export function mapToListingCheckoutResponse(
  */
 export function assertListingLocation(
   location: unknown,
-): asserts location is ListingLocation {
+): asserts location is ListingLocationFromDB {
   if (!location || typeof location !== 'object')
     throw new Error('Invalid listing location shape');
 
@@ -164,7 +163,7 @@ export function assertListingLocation(
 export function mapToListingCardDto(
   listing: PrismaFeaturedListing,
 ): ListingCardDto {
-  const location = listing.location as HomeListingLocation;
+  const location = listing.location as ListingLocationFromDB;
 
   return {
     id: listing.id,

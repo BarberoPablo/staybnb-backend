@@ -9,7 +9,7 @@ import { ListingStatus, Prisma, Profile, Reservation } from '@prisma/client';
 import { AuthUser } from '@src/auth/auth-user';
 import { EmailService } from '@src/email/email.service';
 import { ReservationEmailData, ReservationGuests } from '@src/email/types';
-import { ListingLocation } from '@src/listings/types/listing.types';
+import { ListingLocationFromDB } from '@src/listings/types/listing.types';
 import {
   calculateNights,
   getListingPromotionDB,
@@ -193,7 +193,7 @@ export class ReservationsService {
         listingId: listing.id,
         listingTitle: listing.title,
         listingImages: listing.images,
-        listingAddress: (listing.location as ListingLocation).formatted,
+        listingAddress: (listing.location as ListingLocationFromDB).formatted,
         checkInTime: listing.checkInTime,
         checkOutTime: listing.checkOutTime,
         hostName: `${listing.host.firstName} ${listing.host.lastName}`,

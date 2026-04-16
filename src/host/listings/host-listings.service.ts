@@ -5,41 +5,33 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ListingStatus } from '@prisma/client';
-import { PrismaService } from '@src/prisma/prisma.service';
+import { ResubmitResponseDto } from '@src/host/listings/dto/resubmit-response.dto';
+import { HostListingRepository } from '@src/host/listings/repositories/host-listing.repository';
+import {
+  HostListingDetailsResponseDto,
+  HostListingResponseDto,
+} from './dto/host-listings.dto';
 
 @Injectable()
 export class HostListingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly repository: HostListingRepository) {}
 
-  findByHostId(hostId: string) {
-    return this.prisma.listing.findMany({
-      where: { hostId },
-      include: {
-        amenities: true,
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+  async findHostListings(hostId: string): Promise<HostListingResponseDto[]> {
+    return this.repository.findHostListings(hostId);
   }
 
-  async findById(hostId: string, id: string) {
-    const listing = await this.prisma.listing.findFirst({
-      where: { hostId, id },
-      include: {
-        amenities: true,
-      },
-    });
-
-    if (!listing) {
-      throw new NotFoundException('Listing not found');
-    }
-
-    return listing;
+  async findHostListing(
+    hostId: string,
+    id: string,
+  ): Promise<HostListingDetailsResponseDto> {
+    return this.repository.findHostListing(hostId, id);
   }
 
-  async resubmit(listingId: string, hostId: string) {
-    const listing = await this.prisma.listing.findUnique({
-      where: { id: listingId },
-    });
+  async resubmit(
+    listingId: string,
+    hostId: string,
+  ): Promise<ResubmitResponseDto> {
+    const listing = await this.repository.findRawById(listingId);
 
     if (!listing) {
       throw new NotFoundException('Listing not found');
@@ -56,14 +48,33 @@ export class HostListingsService {
     }
 
     try {
-      await this.prisma.listing.update({
-        where: { id: listingId },
-        data: {
-          status: ListingStatus.PENDING,
-        },
-      });
+      await this.repository.updateStatus(listingId, ListingStatus.PENDING);
     } catch {
       throw new BadRequestException('Failed to resubmit listing');
+    }
+
+    return { success: true };
+  }
+
+  async pause(listingId: string, hostId: string): Promise<ResubmitResponseDto> {
+    const listing = await this.repository.findRawById(listingId);
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.hostId !== hostId) {
+      throw new ForbiddenException('You do not own this listing');
+    }
+
+    if (listing.status !== ListingStatus.PUBLISHED) {
+      throw new BadRequestException('Only published listings can be paused');
+    }
+
+    try {
+      await this.repository.updateStatus(listingId, ListingStatus.PAUSED);
+    } catch {
+      throw new BadRequestException('Failed to pause listing');
     }
 
     return { success: true };
