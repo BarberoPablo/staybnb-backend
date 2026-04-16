@@ -15,10 +15,11 @@ export type PrismaHostListing = Prisma.ListingGetPayload<{
   };
 }>;
 
-export type HostListingLocation = {
-  city: string;
-  country: string;
-};
+export type PrismaHostListingDetails = Prisma.ListingGetPayload<{
+  include: {
+    amenities: true;
+  };
+}>;
 
 export type RawHostListing = {
   id: string;

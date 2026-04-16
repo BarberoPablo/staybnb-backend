@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { Prisma, ReservationStatus } from '@prisma/client';
 import {
   Guests,
-  ListingLocation,
+  ListingLocationFromDB,
   Promotion,
 } from '@src/listings/types/listing.types';
 import { fromZonedTime } from 'date-fns-tz';
@@ -375,7 +375,7 @@ async function generateReservationsForMonthParam() {
       };
 
       // Parse location to get timezone
-      const location = listing.location as ListingLocation;
+      const location = listing.location as ListingLocationFromDB;
       const timezone = location?.timezone || 'UTC';
 
       console.log(

@@ -7,13 +7,13 @@ import {
   Review,
 } from '@prisma/client';
 
-export type ListingLocation = {
-  formatted: string;
-  housenumber: string;
-  street: string;
+export type ListingLocationFromDB = {
   state: string;
+  street: string;
   postcode: string;
   timezone: string;
+  formatted: string;
+  housenumber: string;
 };
 
 export type ListingLocationResponse = {

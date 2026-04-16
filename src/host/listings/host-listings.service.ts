@@ -7,7 +7,10 @@ import {
 import { ListingStatus } from '@prisma/client';
 import { ResubmitResponseDto } from '@src/host/listings/dto/resubmit-response.dto';
 import { HostListingRepository } from '@src/host/listings/repositories/host-listing.repository';
-import { HostListingResponseDto } from './dto/host-listings.dto';
+import {
+  HostListingDetailsResponseDto,
+  HostListingResponseDto,
+} from './dto/host-listings.dto';
 
 @Injectable()
 export class HostListingsService {
@@ -17,12 +20,12 @@ export class HostListingsService {
     return this.repository.findHostListings(hostId);
   }
 
-  /* async findHostListing(
+  async findHostListing(
     hostId: string,
     id: string,
-  ): Promise<ListingResponseDto> { //CHANGE
+  ): Promise<HostListingDetailsResponseDto> {
     return this.repository.findHostListing(hostId, id);
-  } */
+  }
 
   async resubmit(
     listingId: string,

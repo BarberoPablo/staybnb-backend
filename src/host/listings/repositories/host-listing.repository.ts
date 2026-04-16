@@ -1,8 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ListingStatus } from '@prisma/client';
-import { mapHostListingToResponse } from '@src/host/listings/mappers/host-listings.mapper';
+import {
+  mapHostListingDetailsToResponse,
+  mapHostListingToResponse,
+} from '@src/host/listings/mappers/host-listings.mapper';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { HostListingResponseDto } from '../dto/host-listings.dto';
+import {
+  HostListingDetailsResponseDto,
+  HostListingResponseDto,
+} from '../dto/host-listings.dto';
 import { RawHostListing } from '../types/host-listing.types';
 
 @Injectable()
@@ -30,23 +36,21 @@ export class HostListingRepository {
     return listings.map((listing) => mapHostListingToResponse(listing));
   }
 
-  /*   async findHostListing(
+  async findHostListing(
     hostId: string,
     id: string,
-  ): Promise<ListingResponseDto > { //CHANGE TYPE
+  ): Promise<HostListingDetailsResponseDto> {
     const listing = await this.prisma.listing.findFirst({
       where: { hostId, id },
-      include: {
-        amenities: true,
-      },
+      include: { amenities: true },
     });
 
     if (!listing) {
       throw new NotFoundException('Listing not found');
     }
 
-    return mapHostListingToResponse(listing);
-  } */
+    return mapHostListingDetailsToResponse(listing);
+  }
 
   async findRawById(id: string): Promise<RawHostListing | null> {
     return this.prisma.listing.findUnique({

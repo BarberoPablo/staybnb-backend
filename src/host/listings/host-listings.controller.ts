@@ -10,7 +10,10 @@ import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
 import { ResubmitResponseDto } from '@src/host/listings/dto/resubmit-response.dto';
 import { HostListingsService } from '@src/host/listings/host-listings.service';
-import { HostListingResponseDto } from './dto/host-listings.dto';
+import {
+  HostListingDetailsResponseDto,
+  HostListingResponseDto,
+} from './dto/host-listings.dto';
 
 @ApiTags('Host Listings')
 @Controller('host/listings')
@@ -25,15 +28,15 @@ export class HostListingsController {
     return this.service.findHostListings(user.id);
   }
 
-  /* @ApiOkResponse({ type: ListingResponseDto }) //CHANGE
+  @ApiOkResponse({ type: HostListingDetailsResponseDto })
   @ApiNotFoundResponse({ description: 'Listing not found' })
   @Get(':id')
   async find(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-  ): Promise<ListingResponseDto> {
+  ): Promise<HostListingDetailsResponseDto> {
     return this.service.findHostListing(user.id, id);
-  } */
+  }
 
   @ApiOkResponse({ type: ResubmitResponseDto })
   @ApiNotFoundResponse({ description: 'Listing not found' })
