@@ -19,3 +19,9 @@ export type HostListingLocation = {
   city: string;
   country: string;
 };
+
+export type RawHostListing = {
+  id: string;
+  hostId: string;
+  status: string;
+};

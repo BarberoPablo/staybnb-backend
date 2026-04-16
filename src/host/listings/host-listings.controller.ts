@@ -48,4 +48,18 @@ export class HostListingsController {
   ): Promise<ResubmitResponseDto> {
     return this.service.resubmit(listingId, user.id);
   }
+
+  @ApiOkResponse({ type: ResubmitResponseDto })
+  @ApiNotFoundResponse({ description: 'Listing not found' })
+  @ApiForbiddenResponse({ description: 'You do not own this listing' })
+  @ApiBadRequestResponse({
+    description: 'Only published listings can be paused',
+  })
+  @Post(':id/pause')
+  async pauseListing(
+    @Param('id') listingId: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ResubmitResponseDto> {
+    return this.service.pause(listingId, user.id);
+  }
 }

@@ -52,4 +52,28 @@ export class HostListingsService {
 
     return { success: true };
   }
+
+  async pause(listingId: string, hostId: string): Promise<ResubmitResponseDto> {
+    const listing = await this.repository.findRawById(listingId);
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.hostId !== hostId) {
+      throw new ForbiddenException('You do not own this listing');
+    }
+
+    if (listing.status !== ListingStatus.PUBLISHED) {
+      throw new BadRequestException('Only published listings can be paused');
+    }
+
+    try {
+      await this.repository.updateStatus(listingId, ListingStatus.PAUSED);
+    } catch {
+      throw new BadRequestException('Failed to pause listing');
+    }
+
+    return { success: true };
+  }
 }

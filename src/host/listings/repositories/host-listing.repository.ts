@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Listing, ListingStatus } from '@prisma/client';
+import { ListingStatus } from '@prisma/client';
 import { mapHostListingToResponse } from '@src/host/listings/mappers/host-listings.mapper';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { HostListingResponseDto } from '../dto/host-listings.dto';
+import { RawHostListing } from '../types/host-listing.types';
 
 @Injectable()
 export class HostListingRepository {
@@ -47,9 +48,14 @@ export class HostListingRepository {
     return mapHostListingToResponse(listing);
   } */
 
-  async findRawById(id: string): Promise<Listing | null> {
+  async findRawById(id: string): Promise<RawHostListing | null> {
     return this.prisma.listing.findUnique({
       where: { id },
+      select: {
+        id: true,
+        hostId: true,
+        status: true,
+      },
     });
   }
 
