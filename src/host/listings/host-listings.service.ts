@@ -11,6 +11,10 @@ import {
   HostListingDetailsResponseDto,
   HostListingResponseDto,
 } from './dto/host-listings.dto';
+import {
+  PartialUpdateListingDto,
+  SuccessResponseDto,
+} from './dto/update-listing.dto';
 
 @Injectable()
 export class HostListingsService {
@@ -25,6 +29,32 @@ export class HostListingsService {
     id: string,
   ): Promise<HostListingDetailsResponseDto> {
     return this.repository.findHostListing(hostId, id);
+  }
+
+  async updateListing(
+    id: string,
+    hostId: string,
+    updateDto: PartialUpdateListingDto,
+  ): Promise<SuccessResponseDto> {
+    const listing = await this.repository.findRawById(id);
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.hostId !== hostId) {
+      throw new ForbiddenException('You do not own this listing');
+    }
+
+    try {
+      await this.repository.update(id, updateDto);
+
+      return { success: true };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to update listing',
+      );
+    }
   }
 
   async resubmit(

@@ -27,9 +27,11 @@ describe('HostListingsController', () => {
         {
           provide: HostListingsService,
           useValue: {
-            findByHostId: jest.fn(),
-            findById: jest.fn(),
+            findHostListings: jest.fn(),
+            findHostListing: jest.fn(),
+            updateListing: jest.fn(),
             resubmit: jest.fn(),
+            pause: jest.fn(),
           },
         },
       ],
@@ -53,6 +55,24 @@ describe('HostListingsController', () => {
 
       expect(service.findHostListings).toHaveBeenCalledWith('host-1');
       expect(result).toEqual([mockListingResponse]);
+    });
+  });
+
+  describe('update', () => {
+    it('should call service.updateListing', async () => {
+      (service.updateListing as jest.Mock).mockResolvedValue(
+        mockListingResponse,
+      );
+
+      const updateDto = { title: 'Updated' };
+      const result = await controller.update('1', mockUser, updateDto);
+
+      expect(service.updateListing).toHaveBeenCalledWith(
+        '1',
+        'host-1',
+        updateDto,
+      );
+      expect(result).toEqual(mockListingResponse);
     });
   });
 

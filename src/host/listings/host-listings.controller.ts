@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiForbiddenResponse,
@@ -14,6 +14,10 @@ import {
   HostListingDetailsResponseDto,
   HostListingResponseDto,
 } from './dto/host-listings.dto';
+import {
+  PartialUpdateListingDto,
+  SuccessResponseDto,
+} from './dto/update-listing.dto';
 
 @ApiTags('Host Listings')
 @Controller('host/listings')
@@ -36,6 +40,18 @@ export class HostListingsController {
     @Param('id') id: string,
   ): Promise<HostListingDetailsResponseDto> {
     return this.service.findHostListing(user.id, id);
+  }
+
+  @ApiOkResponse({ type: SuccessResponseDto })
+  @ApiNotFoundResponse({ description: 'Listing not found' })
+  @ApiForbiddenResponse({ description: 'You do not own this listing' })
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() updateDto: PartialUpdateListingDto,
+  ): Promise<SuccessResponseDto> {
+    return this.service.updateListing(id, user.id, updateDto);
   }
 
   @ApiOkResponse({ type: ResubmitResponseDto })
