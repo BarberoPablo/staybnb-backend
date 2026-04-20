@@ -10,8 +10,9 @@ describe('HostListingRepository', () => {
 
   const mockPrismaListing = {
     id: '1',
-    title: 'Listing 1',
-    description: 'Desc 1',
+    title: 'Beautiful Beachfront Villa with Pool',
+    description:
+      'This is a very long description to satisfy the new validation rules of the listing.',
     nightPrice: 100,
     images: [],
     bedrooms: 1,
@@ -22,6 +23,9 @@ describe('HostListingRepository', () => {
     maxChildren: 0,
     maxInfants: 0,
     maxPets: 0,
+    checkInTime: '15:00',
+    checkOutTime: '11:00',
+    minCancelDays: 3,
     location: {
       formatted: 'Formatted',
       housenumber: '1',
@@ -41,6 +45,7 @@ describe('HostListingRepository', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     hostId: 'host-1',
+    amenities: [],
   };
 
   beforeEach(async () => {
@@ -50,11 +55,16 @@ describe('HostListingRepository', () => {
         {
           provide: PrismaService,
           useValue: {
+            $transaction: jest.fn(),
             listing: {
               findMany: jest.fn(),
               findFirst: jest.fn(),
               findUnique: jest.fn(),
               update: jest.fn(),
+            },
+            listingAmenity: {
+              deleteMany: jest.fn(),
+              createMany: jest.fn(),
             },
           },
         },
@@ -78,7 +88,18 @@ describe('HostListingRepository', () => {
 
       expect(prisma.listing.findMany).toHaveBeenCalledWith({
         where: { hostId: 'host-1' },
-        include: { amenities: true },
+        select: {
+          id: true,
+          status: true,
+          images: true,
+          title: true,
+          description: true,
+          city: true,
+          country: true,
+          nightPrice: true,
+          propertyType: true,
+          privacyType: true,
+        },
         orderBy: { updatedAt: 'desc' },
       });
       expect(result).toHaveLength(1);
@@ -120,6 +141,11 @@ describe('HostListingRepository', () => {
 
       expect(prisma.listing.findUnique).toHaveBeenCalledWith({
         where: { id: '1' },
+        select: {
+          id: true,
+          hostId: true,
+          status: true,
+        },
       });
       expect(result).toEqual(mockPrismaListing);
     });
@@ -132,6 +158,49 @@ describe('HostListingRepository', () => {
       expect(prisma.listing.update).toHaveBeenCalledWith({
         where: { id: '1' },
         data: { status: ListingStatus.PENDING },
+      });
+    });
+  });
+
+  describe('update', () => {
+    it('should update listing with PENDING status', async () => {
+      const updateDto = {
+        title: 'Updated Title with enough characters',
+        amenities: ['amenity-1'],
+        location: {
+          city: 'New City',
+          country: 'New Country',
+          lat: 10,
+          lng: 20,
+          formatted: 'New Formatted',
+          housenumber: '10',
+          street: 'New Street',
+          state: 'New State',
+          postcode: '456',
+          timezone: 'New Timezone',
+        },
+      };
+
+      (prisma.$transaction as jest.Mock).mockImplementation(async (cb) =>
+        cb(prisma),
+      );
+
+      await repository.update('1', updateDto);
+
+      expect(prisma.listingAmenity.deleteMany).toHaveBeenCalledWith({
+        where: { listingId: '1' },
+      });
+      expect(prisma.listingAmenity.createMany).toHaveBeenCalledWith({
+        data: [{ listingId: '1', amenityId: 'amenity-1' }],
+      });
+      expect(prisma.listing.update).toHaveBeenCalledWith({
+        where: { id: '1' },
+        data: expect.objectContaining({
+          title: updateDto.title,
+          status: ListingStatus.PENDING,
+          city: updateDto.location.city,
+        }),
+        include: { amenities: true },
       });
     });
   });

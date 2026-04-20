@@ -30,10 +30,11 @@ describe('HostListingsService', () => {
         {
           provide: HostListingRepository,
           useValue: {
-            findByHostId: jest.fn(),
-            findById: jest.fn(),
+            findHostListings: jest.fn(),
+            findHostListing: jest.fn(),
             findRawById: jest.fn(),
             updateStatus: jest.fn(),
+            update: jest.fn(),
           },
         },
       ],
@@ -57,6 +58,31 @@ describe('HostListingsService', () => {
 
       expect(repository.findHostListings).toHaveBeenCalledWith('host-1');
       expect(result).toEqual([mockListingResponse]);
+    });
+  });
+
+  describe('updateListing', () => {
+    it('should update listing', async () => {
+      (repository.findRawById as jest.Mock).mockResolvedValue(mockRawListing);
+      (repository.update as jest.Mock).mockResolvedValue(undefined);
+
+      const result = await service.updateListing('1', 'host-1', {
+        title: 'New',
+      });
+
+      expect(repository.update).toHaveBeenCalledWith('1', { title: 'New' });
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should throw ForbiddenException if host does not own the listing', async () => {
+      (repository.findRawById as jest.Mock).mockResolvedValue({
+        ...mockRawListing,
+        hostId: 'other-host',
+      });
+
+      await expect(
+        service.updateListing('1', 'host-1', { title: 'New' }),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
