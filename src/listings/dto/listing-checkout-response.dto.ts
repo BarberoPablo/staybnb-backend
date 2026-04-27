@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { PropertyType } from '../types/listing.types';
+import { ListingStatus, PrivacyType, PropertyType } from '@prisma/client';
+import { ListingPromotionDto } from './listing-response.dto';
 
 export class ListingCheckoutResponseDto {
   @ApiProperty()
@@ -7,6 +8,9 @@ export class ListingCheckoutResponseDto {
 
   @ApiProperty()
   title: string;
+
+  @ApiProperty()
+  status: ListingStatus;
 
   @ApiProperty()
   ratingAvg: number;
@@ -17,20 +21,23 @@ export class ListingCheckoutResponseDto {
   @ApiProperty()
   formattedLocation: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: PropertyType })
   propertyType: PropertyType;
 
-  @ApiProperty()
-  bedrooms: number;
+  @ApiProperty({ enum: PrivacyType })
+  privacyType: PrivacyType;
 
   @ApiProperty()
-  beds: number;
+  image: string;
 
   @ApiProperty()
-  bathrooms: number;
+  checkInTime: string;
 
   @ApiProperty()
-  maxGuests: number;
+  checkOutTime: string;
+
+  @ApiProperty({ type: [ListingPromotionDto] })
+  promotions: ListingPromotionDto[];
 
   @ApiProperty()
   minCancelDays: number;

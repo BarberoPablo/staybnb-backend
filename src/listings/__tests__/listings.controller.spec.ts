@@ -73,7 +73,11 @@ describe('ListingsController', () => {
         cityCenter: { lat: 0, lng: 0 },
       });
 
-      const query: GetListingsQueryDto = { limit: 10, offset: 0 };
+      const query: GetListingsQueryDto = {
+        limit: 10,
+        offset: 0,
+        city: 'miami',
+      };
       const result = await controller.getListings(query);
 
       expect(mockListingsService.search).toHaveBeenCalledWith(query);
@@ -144,38 +148,42 @@ describe('ListingsController', () => {
   });
 
   describe('getCheckoutInfo', () => {
-    it('should return listing checkout info', async () => {
-      const mockListing: any = {
+    it('should return listing checkout info from service', async () => {
+      const mockCheckoutInfo: any = {
         id: '1',
         title: 'Title',
-        ratingAvg: 5,
-        ratingCount: 1,
-        city: 'City',
-        country: 'Country',
+        status: 'PUBLISHED',
+        ratingAvg: 4.5,
+        ratingCount: 10,
+        formattedLocation: '123 Street, City, Country',
         propertyType: 'HOUSE',
-        bedrooms: 1,
-        beds: 1,
-        bathrooms: 1,
-        maxGuests: 2,
+        privacyType: 'ENTIRE',
+        image: 'img1.jpg',
+        checkInTime: '15:00',
+        checkOutTime: '11:00',
+        promotions: [],
         minCancelDays: 3,
         nightPrice: 100,
-        location: {
-          formatted: 'Formatted',
-          housenumber: '1',
-          street: 'Street',
-          state: 'State',
-          postcode: '123',
-          timezone: 'Timezone',
-        },
       };
 
-      mockListingsService.getListingCheckout.mockResolvedValue(mockListing);
+      mockListingsService.getListingCheckout.mockResolvedValue(
+        mockCheckoutInfo,
+      );
 
       const result = await controller.getCheckoutInfo('1');
 
       expect(mockListingsService.getListingCheckout).toHaveBeenCalledWith('1');
-      expect(result.id).toBe('1');
-      expect(result.formattedLocation).toBe('City, Country');
+      expect(result).toEqual(mockCheckoutInfo);
+    });
+
+    it('should throw if service throws', async () => {
+      mockListingsService.getListingCheckout.mockRejectedValue(
+        new Error('Not Found'),
+      );
+
+      await expect(controller.getCheckoutInfo('1')).rejects.toThrow(
+        'Not Found',
+      );
     });
   });
 });

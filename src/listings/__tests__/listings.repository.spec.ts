@@ -1,9 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
-import { Listing, ListingStatus, Prisma } from '@prisma/client';
+import {
+  ListingStatus,
+  PrivacyType,
+  PropertyType,
+  Prisma,
+} from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LISTING_CARD_SELECT,
+  LISTING_CHECKOUT_SELECT,
   SortBy,
   SortOrder,
 } from '../repositories/listing.repository.types';
@@ -266,45 +272,24 @@ describe('ListingRepository', () => {
 
   describe('findForCheckout', () => {
     it('should return listing for checkout from prisma', async () => {
-      const mockListing = {
+      const mockListing: any = {
         id: '1',
         title: 'Title',
-        description: 'Description',
-        nightPrice: 100,
-        images: ['img.jpg'],
-        location: {
-          formatted: 'Formatted',
-          housenumber: '1',
-          street: 'Street',
-          state: 'State',
-          postcode: '123',
-          timezone: 'Timezone',
-        },
-        city: 'City',
-        country: 'Country',
-        lat: 0,
-        lng: 0,
-        promotions: [],
-        maxGuests: 4,
-        maxAdults: 4,
-        maxChildren: 2,
-        maxInfants: 1,
-        maxPets: 1,
-        bedrooms: 2,
-        beds: 2,
-        bathrooms: 1,
-        propertyType: 'HOUSE',
-        privacyType: 'ENTIRE',
-        status: 'PUBLISHED',
+        status: ListingStatus.PUBLISHED,
         ratingAvg: 4.5,
         ratingCount: 10,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        location: {
+          formatted: '123 Street, City, Country',
+        },
+        propertyType: PropertyType.HOUSE,
+        privacyType: PrivacyType.ENTIRE,
+        images: ['img1.jpg'],
         checkInTime: '15:00',
         checkOutTime: '11:00',
+        promotions: [],
         minCancelDays: 3,
-        hostId: 'h1',
-      } as unknown as Listing;
+        nightPrice: 100,
+      };
 
       const findUniqueSpy = jest
         .spyOn(prisma.listing, 'findUniqueOrThrow')
@@ -317,8 +302,19 @@ describe('ListingRepository', () => {
           id: '1',
           status: ListingStatus.PUBLISHED,
         },
+        select: LISTING_CHECKOUT_SELECT,
       });
-      expect(result.id).toBe('1');
+      expect(result).toEqual(mockListing);
+    });
+
+    it('should throw if listing is not found or not published', async () => {
+      jest
+        .spyOn(prisma.listing, 'findUniqueOrThrow')
+        .mockRejectedValue(new Error('Not Found'));
+
+      await expect(
+        repository.findForCheckout({ id: 'non-existent' }),
+      ).rejects.toThrow('Not Found');
     });
   });
 });

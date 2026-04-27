@@ -1,3 +1,4 @@
+/* File dedicated to Prisma related types */
 import { Prisma } from '@prisma/client';
 
 export const LISTING_CARD_SELECT: Prisma.ListingSelect = {
@@ -51,3 +52,26 @@ export interface PopularListingsOptions {
   take?: number;
   skip?: number;
 }
+
+/* Listing Checkout */
+
+export const LISTING_CHECKOUT_SELECT = {
+  id: true,
+  title: true,
+  status: true,
+  ratingAvg: true,
+  ratingCount: true,
+  location: true,
+  propertyType: true,
+  privacyType: true,
+  images: true,
+  checkInTime: true,
+  checkOutTime: true,
+  promotions: true,
+  minCancelDays: true,
+  nightPrice: true,
+} satisfies Prisma.ListingSelect;
+
+export type ListingCheckout = Prisma.ListingGetPayload<{
+  select: typeof LISTING_CHECKOUT_SELECT;
+}>;

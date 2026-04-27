@@ -1,3 +1,4 @@
+/* File dedicated to Domain, independant and response Types */
 import {
   Listing,
   ListingAmenity,
