@@ -6,6 +6,7 @@ import {
   ListingCountsDto,
   ListingResponseDto,
 } from '../dto/listing-response.dto';
+import { ListingCheckout } from '../repositories/listing.repository.types';
 import {
   ListingLocationFromDB,
   ListingWithOptionalRelations,
@@ -118,19 +119,27 @@ export function mapListingToResponse(
 }
 
 export function mapToListingCheckoutResponse(
-  listing: ListingWithOptionalRelations,
+  listing: ListingCheckout,
 ): ListingCheckoutResponseDto {
+  const location = listing.location as { formatted: string };
+
+  if (!location || typeof location !== 'object') {
+    throw new Error('Invalid location');
+  }
+
   return {
     id: listing.id,
     title: listing.title,
+    status: listing.status,
     ratingAvg: listing.ratingAvg,
     ratingCount: listing.ratingCount,
-    formattedLocation: `${listing.city}, ${listing.country}`,
+    formattedLocation: location.formatted,
     propertyType: listing.propertyType,
-    bedrooms: listing.bedrooms,
-    beds: listing.beds,
-    bathrooms: listing.bathrooms,
-    maxGuests: listing.maxGuests,
+    privacyType: listing.privacyType,
+    image: listing.images[0],
+    checkInTime: listing.checkInTime,
+    checkOutTime: listing.checkOutTime,
+    promotions: parsePromotionsFromDBToResponse(listing.promotions),
     minCancelDays: listing.minCancelDays,
     nightPrice: listing.nightPrice,
   };

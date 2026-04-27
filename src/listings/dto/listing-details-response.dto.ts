@@ -1,19 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ListingStatus, PrivacyType, PropertyType } from '@prisma/client';
-import { ListingCardLocationDto } from './listing-card.dto';
 import { Type } from 'class-transformer';
 import { IsDate, IsNotEmpty } from 'class-validator';
-
-class ListingPromotionDto {
-  @ApiProperty()
-  minNights: number;
-
-  @ApiProperty()
-  discountPercentage: number;
-
-  @ApiProperty()
-  description: string;
-}
+import { ListingCardLocationDto } from './listing-card.dto';
+import { ListingPromotionDto } from './listing-response.dto';
 
 class ListingStructureDto {
   @ApiProperty()
@@ -127,19 +117,19 @@ export class ListingDetailsResponseDto {
   @ApiProperty({ enum: PrivacyType })
   privacyType: PrivacyType;
 
-  @ApiPropertyOptional({ type: ListingDetailsHostDto })
+  @ApiProperty({ type: ListingDetailsHostDto })
   host: ListingDetailsHostDto;
 
-  @ApiPropertyOptional({ type: [String] })
+  @ApiProperty({ type: [String] })
   amenities: string[];
 
-  @ApiPropertyOptional({ type: [ListingDetailsReviewDto] })
+  @ApiProperty({ type: [ListingDetailsReviewDto] })
   reviews: ListingDetailsReviewDto[];
 
   @ApiProperty({ type: [ListingPromotionDto] })
   promotions: ListingPromotionDto[];
 
-  @ApiPropertyOptional({ type: [ListingDetailsReservationDto] })
+  @ApiProperty({ type: [ListingDetailsReservationDto] })
   reservations: ListingDetailsReservationDto[];
 
   @ApiProperty()

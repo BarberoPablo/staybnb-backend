@@ -2,7 +2,10 @@ import { BadRequestException } from '@nestjs/common';
 import { DraftListing } from '@prisma/client';
 import { completeDraftListingSchema } from './complete-draft.schema';
 
-export function validateDraftForCompletion(draft: DraftListing) {
+/**
+ * Structural validation of a draft listing for completion
+ */
+export function validateDraftStructureForCompletion(draft: DraftListing): void {
   const result = completeDraftListingSchema.safeParse({
     ...draft,
     location: draft.location,
@@ -11,6 +14,4 @@ export function validateDraftForCompletion(draft: DraftListing) {
   if (!result.success) {
     throw new BadRequestException('Draft listing is incomplete');
   }
-
-  return result.data;
 }

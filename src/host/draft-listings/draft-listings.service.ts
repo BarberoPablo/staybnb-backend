@@ -11,7 +11,7 @@ import { PartialUpdateDraftListingDto } from './dto/draft-listing-update.dto';
 import { DraftListing } from './dto/draft-listing.types';
 import { mapDraftToListingUpdate } from './mappers/draft-listings.mappers';
 import { DraftListingsRepository } from './repositories/draft-listings.repository';
-import { validateDraftForCompletion } from './validation/validate-complete-draft';
+import { validateDraftStructureForCompletion } from './validation/validate-complete-draft';
 
 @Injectable()
 export class DraftListingsService {
@@ -34,7 +34,7 @@ export class DraftListingsService {
       draftId,
     );
 
-    validateDraftForCompletion(draft);
+    validateDraftStructureForCompletion(draft);
 
     if (draft.amenities?.length) {
       const count = await this.amenitiesRepository.countByIds(draft.amenities);

@@ -417,14 +417,66 @@ describe('ListingsService', () => {
   });
 
   describe('getListingCheckout', () => {
-    it('should return result from repository', async () => {
-      const mockResult = { id: '1' } as unknown as ListingWithOptionalRelations;
-      jest.spyOn(repository, 'findForCheckout').mockResolvedValue(mockResult);
+    it('should return mapped listing checkout info from repository', async () => {
+      const mockListing: any = {
+        id: '1',
+        title: 'Title',
+        status: ListingStatus.PUBLISHED,
+        ratingAvg: 4.5,
+        ratingCount: 10,
+        location: {
+          formatted: '123 Street, City, Country',
+        },
+        propertyType: 'HOUSE',
+        privacyType: 'ENTIRE',
+        images: ['img1.jpg'],
+        checkInTime: '15:00',
+        checkOutTime: '11:00',
+        promotions: [],
+        minCancelDays: 3,
+        nightPrice: 100,
+      };
+
+      jest.spyOn(repository, 'findForCheckout').mockResolvedValue(mockListing);
 
       const result = await service.getListingCheckout('1');
 
       expect(repository.findForCheckout).toHaveBeenCalledWith({ id: '1' });
-      expect(result).toBe(mockResult);
+      expect(result).toEqual({
+        id: '1',
+        title: 'Title',
+        status: ListingStatus.PUBLISHED,
+        ratingAvg: 4.5,
+        ratingCount: 10,
+        formattedLocation: '123 Street, City, Country',
+        propertyType: 'HOUSE',
+        privacyType: 'ENTIRE',
+        image: 'img1.jpg',
+        checkInTime: '15:00',
+        checkOutTime: '11:00',
+        promotions: [],
+        minCancelDays: 3,
+        nightPrice: 100,
+      });
+    });
+
+    it('should throw if repository throws', async () => {
+      jest
+        .spyOn(repository, 'findForCheckout')
+        .mockRejectedValue(new Error('Not Found'));
+
+      await expect(service.getListingCheckout('1')).rejects.toThrow('Not Found');
+    });
+
+    it('should throw if listing has invalid location', async () => {
+      const mockListing: any = {
+        id: '1',
+        location: null,
+      };
+
+      jest.spyOn(repository, 'findForCheckout').mockResolvedValue(mockListing);
+
+      await expect(service.getListingCheckout('1')).rejects.toThrow('Invalid location');
     });
   });
 });

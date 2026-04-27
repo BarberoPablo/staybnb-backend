@@ -65,7 +65,6 @@ export class ListingsController {
   async getCheckoutInfo(
     @Param('id') id: string,
   ): Promise<ListingCheckoutResponseDto> {
-    const listing = await this.service.getListingCheckout(id);
-    return mapToListingCheckoutResponse(listing);
+    return this.service.getListingCheckout(id);
   }
 }

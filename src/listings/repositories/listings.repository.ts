@@ -2,19 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { ListingCardDto } from '../dto/listing-card.dto';
-import {
-  assertListingLocation,
-  mapToListingCardDto,
-} from '../mappers/listings.mapper';
-import {
-  ListingDetails,
-  ListingWithOptionalRelations,
-} from '../types/listing.types';
+import { mapToListingCardDto } from '../mappers/listings.mapper';
+import { ListingDetails } from '../types/listing.types';
 import {
   FeaturedListingsOptions,
   FindForCheckoutOptions,
   FindWithDetailsOptions,
   LISTING_CARD_SELECT,
+  LISTING_CHECKOUT_SELECT,
+  ListingCheckout,
   PopularListingsOptions,
   SearchListingsOptions,
 } from './listing.repository.types';
@@ -151,25 +147,15 @@ export class ListingRepository {
 
   async findForCheckout(
     options: FindForCheckoutOptions,
-  ): Promise<ListingWithOptionalRelations> {
+  ): Promise<ListingCheckout> {
     const listing = await this.prisma.listing.findUniqueOrThrow({
       where: {
         id: options.id,
         status: ListingStatus.PUBLISHED,
       },
+      select: LISTING_CHECKOUT_SELECT,
     });
 
-    return this.sanitizeListing(listing);
-  }
-
-  private sanitizeListing(
-    listing: Prisma.ListingGetPayload<any>,
-  ): ListingWithOptionalRelations {
-    assertListingLocation(listing.location);
-
-    return {
-      ...listing,
-      location: listing.location,
-    };
+    return listing;
   }
 }

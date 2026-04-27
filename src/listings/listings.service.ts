@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CitiesService } from '@src/cities/cities.service';
 import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
-import { ListingWithOptionalRelations } from '@src/listings/types/listing.types';
 import { buildListingsWhere } from './builders/build-listings-where';
 import { ListingCardDto } from './dto/listing-card.dto';
+import { ListingCheckoutResponseDto } from './dto/listing-checkout-response.dto';
 import { ListingDetailsResponseDto } from './dto/listing-details-response.dto';
 import { mapListingDetailsToResponse } from './mappers/listing-details.mapper';
 import { SearchListingsOptions } from './repositories/listing.repository.types';
 import { ListingRepository } from './repositories/listings.repository';
+import { mapToListingCheckoutResponse } from './mappers/listings.mapper';
 
 @Injectable()
 export class ListingsService {
@@ -95,7 +96,8 @@ export class ListingsService {
     return mapListingDetailsToResponse(listing);
   }
 
-  async getListingCheckout(id: string): Promise<ListingWithOptionalRelations> {
-    return this.listingRepository.findForCheckout({ id });
+  async getListingCheckout(id: string): Promise<ListingCheckoutResponseDto> {
+    const listing = await this.listingRepository.findForCheckout({ id });
+    return mapToListingCheckoutResponse(listing);
   }
 }
