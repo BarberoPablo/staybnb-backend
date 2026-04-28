@@ -4,7 +4,6 @@ import { Public } from '@src/auth/public.decorator';
 import { GetFeaturedListingsQueryDto } from '@src/listings/dto/get-featured-listings-query.dto';
 import { GetListingsQueryDto } from '@src/listings/dto/get-listings-query.dto';
 import { ListingsService } from '@src/listings/listings.service';
-import { mapToListingCheckoutResponse } from '@src/listings/mappers/listings.mapper';
 import {
   ListingCardDto,
   SearchListingsResponseDto,
