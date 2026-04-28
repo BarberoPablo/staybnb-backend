@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
+import {
+  Listing,
+  ListingStatus,
+  Prisma,
+  Profile,
+  ReservationStatus,
+} from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { ListingCardDto } from '../dto/listing-card.dto';
 import { mapToListingCardDto } from '../mappers/listings.mapper';
@@ -18,6 +24,15 @@ import {
 @Injectable()
 export class ListingRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findListingById(
+    id: string,
+  ): Promise<(Listing & { host: Profile }) | null> {
+    return this.prisma.listing.findUnique({
+      where: { id },
+      include: { host: true },
+    });
+  }
 
   async findFeatured(
     options: FeaturedListingsOptions,
