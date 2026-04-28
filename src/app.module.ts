@@ -14,7 +14,7 @@ import { DraftListingsModule } from './host/draft-listings/draft-listings.module
 import { HostListingsModule } from './host/listings/host-listings.module';
 import { ListingsModule } from './listings/listings.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { UsersModule } from './profiles/profiles.module';
+import { ProfilesModule } from './profiles/profiles.module';
 import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
@@ -33,7 +33,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     AuthModule,
     PrismaModule,
     HealthModule,
-    UsersModule,
+    ProfilesModule,
     DraftListingsModule,
     HostListingsModule,
     AdminListingsModule,

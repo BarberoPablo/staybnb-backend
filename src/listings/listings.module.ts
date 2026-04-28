@@ -8,5 +8,6 @@ import { ListingRepository } from '@src/listings/repositories/listings.repositor
   imports: [CitiesModule],
   controllers: [ListingsController],
   providers: [ListingsService, ListingRepository],
+  exports: [ListingRepository],
 })
 export class ListingsModule {}
