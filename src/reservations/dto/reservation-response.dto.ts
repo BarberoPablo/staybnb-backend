@@ -10,10 +10,10 @@ export class ReservationResponseDto {
   listingId: string;
 
   @ApiProperty()
-  startDate: Date;
+  startDate: string;
 
   @ApiProperty()
-  endDate: Date;
+  endDate: string;
 
   @ApiProperty()
   guests: ReservationGuestsDto;
@@ -38,4 +38,12 @@ export class ReservationResponseDto {
 
   @ApiProperty()
   createdAt: Date;
+}
+
+export class SuccessResponseDto {
+  @ApiProperty()
+  success: boolean;
+
+  @ApiProperty()
+  reservationId: string;
 }

@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Listing, ListingStatus, Profile } from '@prisma/client';
+import { ListingStatus, Profile } from '@prisma/client';
 import { AuthUser } from '@src/auth/auth-user';
 import { EmailService } from '@src/email/email.service';
 import { ReservationEmailData, ReservationGuests } from '@src/email/types';
@@ -18,11 +18,17 @@ import {
   twoDecimals,
 } from '@src/listings/utils/listings.utils';
 import { ProfilesRepository } from '@src/profiles/repositories/profiles.repository';
-import { ReservationResponseDto } from './dto/reservation-response.dto';
+import { formatInTimeZone } from 'date-fns-tz';
+import {
+  ReservationResponseDto,
+  SuccessResponseDto,
+} from './dto/reservation-response.dto';
 import {
   CreateReservationDto,
   ReservationGuestsDto,
 } from './dto/reservations-create.dto';
+import { ListingUnavailableDatesDto } from './dto/reservations-unavailable-dates.dto';
+import { addDays } from './mappers/reservations.mapper';
 import { ReservationRepository } from './repositories/reservation.repository';
 
 @Injectable()
@@ -36,25 +42,51 @@ export class ReservationsService {
     private readonly emailService: EmailService,
   ) {}
 
+  async getUnavailableDates(
+    listingId: string,
+  ): Promise<ListingUnavailableDatesDto> {
+    const reservations =
+      await this.repository.findUpcomingByListingId(listingId);
+
+    const unavailableCheckInDates = new Set<string>();
+    const unavailableCheckOutDates = new Set<string>();
+
+    for (const reservation of reservations) {
+      const { startDate, endDate } = reservation;
+
+      unavailableCheckInDates.add(startDate);
+      unavailableCheckOutDates.add(endDate);
+
+      let current = addDays(startDate, 1);
+      const last = addDays(endDate, -1);
+
+      while (current <= last) {
+        unavailableCheckInDates.add(current);
+        unavailableCheckOutDates.add(current);
+        current = addDays(current, 1);
+      }
+    }
+
+    return {
+      unavailableCheckInDates: Array.from(unavailableCheckInDates).sort(),
+      unavailableCheckOutDates: Array.from(unavailableCheckOutDates).sort(),
+    };
+  }
+
   async create(
     listingId: string,
     data: CreateReservationDto,
     user: AuthUser,
-  ): Promise<ReservationResponseDto> {
+  ): Promise<SuccessResponseDto> {
     const { startDate, endDate, guests } = data;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (startDate < today) {
-      throw new BadRequestException('Start date must be in the future');
-    }
 
     if (endDate <= startDate) {
       throw new BadRequestException('End date must be after start date');
     }
 
     // We still need to find the listing for price calculation and guest limits validation
-    const listing = await this.listingRepository.findListingById(listingId);
+    const listing =
+      await this.listingRepository.findListingForReservation(listingId);
 
     if (!listing) {
       throw new NotFoundException('Listing not found');
@@ -68,13 +100,30 @@ export class ReservationsService {
       throw new ForbiddenException('You cannot book your own listing');
     }
 
-    this._validateGuests(guests, listing);
+    const today = formatInTimeZone(
+      new Date(),
+      listing.location?.timezone,
+      'yyyy-MM-dd',
+    );
+
+    if (startDate < today) {
+      throw new BadRequestException('Start date must be in the future');
+    }
+
+    this._validateGuests(
+      guests,
+      listing.maxAdults,
+      listing.maxChildren,
+      listing.maxInfants,
+      listing.maxPets,
+      listing.maxGuests,
+    );
 
     const conflictingReservations =
       await this.repository.findConflictingReservations({
         listingId,
-        startDate,
-        endDate,
+        newStartDate: startDate,
+        newEndDate: endDate,
       });
 
     if (conflictingReservations.length > 0) {
@@ -82,7 +131,7 @@ export class ReservationsService {
     }
 
     const nights = calculateNights(startDate, endDate);
-    const promotion = getListingPromotionDB(listing, nights);
+    const promotion = getListingPromotionDB(listing.promotions, nights);
 
     const discountPercentage = promotion?.discountPercentage || 0;
     const basePrice = listing.nightPrice * nights;
@@ -93,10 +142,11 @@ export class ReservationsService {
     const reservation = await this.repository.create({
       userId: user.id,
       listingId: listingId,
-      startDate: startDate,
-      endDate: endDate,
-      guests,
-      totalPrice: totalPrice,
+      startDate,
+      endDate,
+      // Prisma expects a plain JSON-serializable object, not a DTO class instance
+      guests: { ...guests },
+      totalPrice,
       totalNights: nights,
       nightPrice: listing.nightPrice,
       discount: discount > 0 ? twoDecimals(discount) : null,
@@ -120,38 +170,42 @@ export class ReservationsService {
       });
     }
 
-    return reservation;
+    return { success: true, reservationId: reservation.id };
   }
 
   private _validateGuests(
     guests: ReservationGuestsDto,
-    listing: Listing,
+    maxAdults: number,
+    maxChildren: number,
+    maxInfants: number,
+    maxPets: number,
+    maxGuests: number,
   ): void {
-    if (guests.adults > listing.maxAdults) {
+    if (guests.adults > maxAdults) {
       throw new BadRequestException(
-        `Invalid number of adults: max is ${listing.maxAdults}`,
+        `Invalid number of adults: max is ${maxAdults}`,
       );
     }
-    if (guests.children > listing.maxChildren) {
+    if (guests.children > maxChildren) {
       throw new BadRequestException(
-        `Invalid number of children: max is ${listing.maxChildren}`,
+        `Invalid number of children: max is ${maxChildren}`,
       );
     }
-    if (guests.infant > listing.maxInfants) {
+    if (guests.infant > maxInfants) {
       throw new BadRequestException(
-        `Invalid number of infants: max is ${listing.maxInfants}`,
+        `Invalid number of infants: max is ${maxInfants}`,
       );
     }
-    if (guests.pets > listing.maxPets) {
+    if (guests.pets > maxPets) {
       throw new BadRequestException(
-        `Invalid number of pets: max is ${listing.maxPets}`,
+        `Invalid number of pets: max is ${maxPets}`,
       );
     }
 
     const totalGuests = getTotalGuests(guests);
-    if (totalGuests > listing.maxGuests) {
+    if (totalGuests > maxGuests) {
       throw new BadRequestException(
-        `Total guests (${totalGuests}) exceeds maximum capacity (${listing.maxGuests})`,
+        `Total guests (${totalGuests}) exceeds maximum capacity (${maxGuests})`,
       );
     }
   }
@@ -159,7 +213,7 @@ export class ReservationsService {
   private async _sendConfirmationEmail(
     reservation: ReservationResponseDto,
     guestProfile: Profile,
-    listing: Listing & { host: Profile },
+    listing: EmailListing,
     email: string,
   ): Promise<void> {
     try {
@@ -195,3 +249,18 @@ export class ReservationsService {
     }
   }
 }
+type EmailListing = {
+  id: string;
+  title: string;
+  images: string[];
+  location: {
+    formatted: string;
+  };
+  checkInTime: string;
+  checkOutTime: string;
+  host: {
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+  };
+};

@@ -75,3 +75,26 @@ export const LISTING_CHECKOUT_SELECT = {
 export type ListingCheckout = Prisma.ListingGetPayload<{
   select: typeof LISTING_CHECKOUT_SELECT;
 }>;
+
+export const LISTING_FOR_CREATING_RESERVATION = {
+  id: true,
+  title: true,
+  images: true,
+  checkInTime: true,
+  checkOutTime: true,
+  status: true,
+  hostId: true,
+  nightPrice: true,
+  maxAdults: true,
+  maxChildren: true,
+  maxInfants: true,
+  maxPets: true,
+  maxGuests: true,
+  promotions: true,
+  host: true,
+  location: true,
+} satisfies Prisma.ListingSelect;
+
+export type ListingForCreatingReservationDB = Prisma.ListingGetPayload<{
+  select: typeof LISTING_FOR_CREATING_RESERVATION;
+}>;

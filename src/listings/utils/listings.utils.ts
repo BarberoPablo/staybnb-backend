@@ -1,24 +1,22 @@
-import { Listing } from '@prisma/client';
 import { Guests, Promotion } from '../types/listing.types';
+import { differenceInCalendarDays, parse } from 'date-fns';
 
 export function getTotalGuests(guests: Record<Guests, number>) {
   return Object.values(guests).reduce((total, count) => total + count, 0);
 }
 
-export function calculateNights(startDate: Date, endDate: Date) {
-  return Math.max(
-    1,
-    Math.ceil(
-      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-    ),
-  );
+export function calculateNights(startDate: string, endDate: string) {
+  const start = parse(startDate, 'yyyy-MM-dd', new Date());
+  const end = parse(endDate, 'yyyy-MM-dd', new Date());
+
+  return differenceInCalendarDays(end, start);
 }
 
 export function getListingPromotionDB(
-  listing: Listing,
+  promotions: Promotion[],
   nights: number,
 ): Promotion | null {
-  const sortedPromotions = [...(listing.promotions as Promotion[])].sort(
+  const sortedPromotions = [...promotions].sort(
     (a, b) => a.minNights - b.minNights,
   );
   const promos = sortedPromotions?.filter((promo) => promo.minNights <= nights);

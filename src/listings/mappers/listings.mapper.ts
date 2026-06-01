@@ -6,8 +6,12 @@ import {
   ListingCountsDto,
   ListingResponseDto,
 } from '../dto/listing-response.dto';
-import { ListingCheckout } from '../repositories/listing.repository.types';
 import {
+  ListingCheckout,
+  ListingForCreatingReservationDB,
+} from '../repositories/listing.repository.types';
+import {
+  ListingForCreatingReservation,
   ListingLocationFromDB,
   ListingWithOptionalRelations,
   PrismaFeaturedListing,
@@ -202,4 +206,36 @@ export function parsePromotionsFromDBToResponse(
     throw new Error('Invalid promotion');
   }
   return promotion as Promotion[];
+}
+
+export function mapListingForCreatingReservation(
+  listing: ListingForCreatingReservationDB,
+): ListingForCreatingReservation {
+  const location = listing.location as { timezone: string; formatted: string };
+
+  return {
+    id: listing.id,
+    title: listing.title,
+    images: listing.images,
+    checkInTime: listing.checkInTime,
+    checkOutTime: listing.checkOutTime,
+    status: listing.status,
+    hostId: listing.hostId,
+    nightPrice: listing.nightPrice,
+    maxAdults: listing.maxAdults,
+    maxChildren: listing.maxChildren,
+    maxInfants: listing.maxInfants,
+    maxPets: listing.maxPets,
+    maxGuests: listing.maxGuests,
+    promotions: parsePromotionsFromDBToResponse(listing.promotions),
+    location: {
+      timezone: location.timezone,
+      formatted: location.formatted,
+    },
+    host: {
+      firstName: listing.host.firstName,
+      lastName: listing.host.lastName,
+      avatarUrl: listing.host.avatarUrl,
+    },
+  };
 }

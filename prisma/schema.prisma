@@ -137,8 +137,8 @@ model Reservation {
   userId    String?
   listingId String
 
-  startDate DateTime @db.Timestamptz(6)
-  endDate   DateTime @db.Timestamptz(6)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
 
   guests Json @default("{}")
 

@@ -1,21 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import {
-  Listing,
-  ListingStatus,
-  Prisma,
-  Profile,
-  ReservationStatus,
-} from '@prisma/client';
+import { ListingStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { ListingCardDto } from '../dto/listing-card.dto';
-import { mapToListingCardDto } from '../mappers/listings.mapper';
-import { ListingDetails } from '../types/listing.types';
+import {
+  mapListingForCreatingReservation,
+  mapToListingCardDto,
+} from '../mappers/listings.mapper';
+import {
+  ListingDetails,
+  ListingForCreatingReservation,
+} from '../types/listing.types';
 import {
   FeaturedListingsOptions,
   FindForCheckoutOptions,
   FindWithDetailsOptions,
   LISTING_CARD_SELECT,
   LISTING_CHECKOUT_SELECT,
+  LISTING_FOR_CREATING_RESERVATION,
   ListingCheckout,
   PopularListingsOptions,
   SearchListingsOptions,
@@ -25,13 +26,17 @@ import {
 export class ListingRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findListingById(
+  async findListingForReservation(
     id: string,
-  ): Promise<(Listing & { host: Profile }) | null> {
-    return this.prisma.listing.findUnique({
+  ): Promise<ListingForCreatingReservation | null> {
+    const listing = await this.prisma.listing.findUnique({
       where: { id },
-      include: { host: true },
+      select: LISTING_FOR_CREATING_RESERVATION,
     });
+
+    if (!listing) return null;
+
+    return mapListingForCreatingReservation(listing);
   }
 
   async findFeatured(

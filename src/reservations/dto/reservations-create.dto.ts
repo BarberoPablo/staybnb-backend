@@ -1,21 +1,36 @@
-import { Guests } from '@src/listings/types/listing.types';
-import { Type } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsObject } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, Matches } from 'class-validator';
 
-export type ReservationGuestsDto = Record<Guests, number>;
+export class ReservationGuestsDto {
+  @ApiProperty()
+  adults: number;
+
+  @ApiProperty()
+  children: number;
+
+  @ApiProperty()
+  infant: number;
+
+  @ApiProperty()
+  pets: number;
+}
 
 export class CreateReservationDto {
-  @Type(() => Date)
-  @IsDate()
+  @ApiProperty({
+    example: '2026-05-20',
+  })
   @IsNotEmpty()
-  startDate: Date;
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  startDate: string;
 
-  @Type(() => Date)
-  @IsDate()
+  @ApiProperty({
+    example: '2026-05-25',
+  })
   @IsNotEmpty()
-  endDate: Date;
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  endDate: string;
 
-  @IsObject()
+  @ApiProperty({ type: ReservationGuestsDto })
   @IsNotEmpty()
   guests: ReservationGuestsDto;
 }
