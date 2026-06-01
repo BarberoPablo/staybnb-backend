@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Reservation } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { ReservationResponseDto } from '../dto/reservation-response.dto';
-import { ReservationsMapper } from '../mappers/reservations.mapper';
+import { ReservationsMapper, toUtcDate } from '../mappers/reservations.mapper';
 import {
   ConflictingReservationsInput,
   CreateReservationInput,
@@ -14,35 +14,50 @@ export class ReservationRepository {
 
   async findConflictingReservations({
     listingId,
-    startDate,
-    endDate,
+    newStartDate,
+    newEndDate,
   }: ConflictingReservationsInput): Promise<Reservation[]> {
     return this.prisma.reservation.findMany({
       where: {
         listingId,
         status: 'UPCOMING',
-        OR: [
+        AND: [
           {
-            AND: [
-              { startDate: { lte: startDate } },
-              { endDate: { gt: startDate } },
-            ],
+            startDate: {
+              lt: toUtcDate(newEndDate), // existing.startDate < newEndDate
+            },
           },
           {
-            AND: [
-              { startDate: { lt: endDate } },
-              { endDate: { gte: endDate } },
-            ],
-          },
-          {
-            AND: [
-              { startDate: { gte: startDate } },
-              { endDate: { lte: endDate } },
-            ],
+            endDate: {
+              gt: toUtcDate(newStartDate), // existing.endDate > newStartDate
+            },
           },
         ],
       },
     });
+  }
+
+  async findUpcomingByListingId(
+    listingId: string,
+  ): Promise<{ startDate: string; endDate: string }[]> {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const reservations = await this.prisma.reservation.findMany({
+      where: {
+        listingId,
+        status: 'UPCOMING',
+        endDate: { gte: today },
+      },
+      select: {
+        startDate: true,
+        endDate: true,
+      },
+    });
+
+    return reservations.map((reservation) =>
+      ReservationsMapper.mapReservationDatesToString(reservation),
+    );
   }
 
   async create(data: CreateReservationInput): Promise<ReservationResponseDto> {
@@ -50,8 +65,8 @@ export class ReservationRepository {
       data: {
         userId: data.userId,
         listingId: data.listingId,
-        startDate: data.startDate,
-        endDate: data.endDate,
+        startDate: toUtcDate(data.startDate),
+        endDate: toUtcDate(data.endDate),
         guests: data.guests,
         totalPrice: data.totalPrice,
         totalNights: data.totalNights,

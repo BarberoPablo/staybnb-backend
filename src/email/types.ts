@@ -7,8 +7,8 @@ export interface ReservationEmailData {
 
   // Reservation details
   reservationId: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   guests: ReservationGuests;
   totalNights: number;
   totalPrice: number;

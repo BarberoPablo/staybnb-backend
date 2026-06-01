@@ -289,7 +289,7 @@ export function ReservationConfirmationEmail({
                             color: '#364153',
                           }}
                         >
-                          {formatDate(startDate)}
+                          {startDate}
                           <br />
                           <small style={{ color: '#6A6A6A', fontSize: '14px' }}>
                             {formatTime(checkInTime)}
@@ -303,7 +303,7 @@ export function ReservationConfirmationEmail({
                             color: '#364153',
                           }}
                         >
-                          {formatDate(endDate)}
+                          {endDate}
                           <br />
                           <small style={{ color: '#6A6A6A', fontSize: '14px' }}>
                             {formatTime(checkOutTime)}

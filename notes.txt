@@ -4,6 +4,9 @@ Migration, for sync new schema with DB:
   To generate the prisma client based on the prisma schema for type-safety:
     npx prisma generate
 
+Run DOCKER commands
+docker exec -it staybnb-db psql -U staybnb
+
 Visual UI:
   ** From wsl this doesn't work:
     npx prisma studio
@@ -16,3 +19,4 @@ npm run test fileRoute
 
 Lint
 npm run lint
+

@@ -1,7 +1,8 @@
-/* File dedicated to Domain, independant and response Types */
+/* File dedicated to Domain, independant and response Types. Service types */
 import {
   Listing,
   ListingAmenity,
+  ListingStatus,
   Prisma,
   Profile,
   Reservation,
@@ -118,4 +119,30 @@ export type HomeListingLocation = {
   city: string;
   state: string;
   country: string;
+};
+
+export type ListingForCreatingReservation = {
+  id: string;
+  title: string;
+  images: string[];
+  checkInTime: string;
+  checkOutTime: string;
+  status: ListingStatus;
+  hostId: string;
+  nightPrice: number;
+  maxAdults: number;
+  maxChildren: number;
+  maxInfants: number;
+  maxPets: number;
+  maxGuests: number;
+  promotions: Promotion[];
+  location: {
+    timezone: string;
+    formatted: string;
+  };
+  host: {
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+  };
 };

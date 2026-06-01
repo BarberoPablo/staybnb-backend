@@ -1,11 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Prisma, ReservationStatus } from '@prisma/client';
-import {
-  Guests,
-  ListingLocationFromDB,
-  Promotion,
-} from '@src/listings/types/listing.types';
-import { fromZonedTime } from 'date-fns-tz';
+import { Guests, Promotion } from '@src/listings/types/listing.types';
 import 'dotenv/config';
 import { createPrismaClient } from './prisma.factory';
 
@@ -19,22 +14,20 @@ interface ReservationPattern {
 // Set seed for consistent results during development
 faker.seed(101112);
 
-// Helper function to create UTC date with proper check-in/check-out times
-function createUTCDateWithTime(
-  date: Date,
-  time: string,
-  timezone: string,
-): Date {
-  const dateString = date.toISOString().substring(0, 10); // Get YYYY-MM-DD format
-  const dateTimeString = `${dateString}T${time}:00`;
-  return fromZonedTime(dateTimeString, timezone);
+// Helper function to create UTC date at midnight
+function createUTCDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month, day));
 }
 
 function generateReservationStatus(endDate: Date): ReservationStatus {
   const now = new Date();
+  // Set now to midnight UTC for comparison with endDate
+  const today = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
 
-  // If endDate is in the past, it's completed (unless canceled)
-  if (endDate < now) {
+  // If endDate is in the past or today (since endDate is exclusive), it's completed (unless canceled)
+  if (endDate <= today) {
     // Check if it was canceled (8% chance for past reservations)
     if (Math.random() < 0.08) {
       return faker.helpers.arrayElement([
@@ -46,7 +39,7 @@ function generateReservationStatus(endDate: Date): ReservationStatus {
   }
 
   // If endDate is in the future, it's upcoming (unless canceled)
-  if (endDate >= now) {
+  if (endDate > today) {
     // Check if it was canceled (8% chance for future reservations)
     if (Math.random() < 0.08) {
       return faker.helpers.arrayElement([
@@ -57,7 +50,6 @@ function generateReservationStatus(endDate: Date): ReservationStatus {
     return ReservationStatus.UPCOMING;
   }
 
-  // Fallback (shouldn't happen)
   return ReservationStatus.COMPLETED;
 }
 
@@ -125,7 +117,6 @@ function generateGuestCombination(
     }
   }
 
-  // ✅ Return the correct format: just the numbers, not objects with min/max
   return { adults, children, infant, pets };
 }
 
@@ -183,23 +174,20 @@ function generateReservationsForMonth(
   month: number, // 0-11 (JavaScript month format)
   maxGuests: number,
   guestLimits: Record<Guests, { min: number; max: number }>,
-  checkInTime: string,
-  checkOutTime: string,
-  timezone: string,
   existingReservations: ReservationPattern[] = [],
 ): ReservationPattern[] {
   const reservations: ReservationPattern[] = [];
 
   // Calculate month boundaries
-  const monthStart = new Date(year, month, 1);
-  const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
-  const daysInMonth = monthEnd.getDate();
+  const monthStart = createUTCDate(year, month, 1);
+  const monthEnd = createUTCDate(year, month + 1, 0);
+  const daysInMonth = monthEnd.getUTCDate();
 
-  // Generate 2-5 reservations for this month
-  const reservationCount = faker.number.int({ min: 2, max: 5 });
+  // Generate 1-6 reservations for this month to ensure gaps and variety
+  const targetReservationCount = faker.number.int({ min: 1, max: 6 });
 
   console.log(
-    `   📅 Generating ${reservationCount} reservations for ${monthStart.toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+    `   📅 Target: ${targetReservationCount} reservations for ${monthStart.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' })}`,
   );
 
   // Track occupied days to avoid overlaps
@@ -211,38 +199,31 @@ function generateReservationsForMonth(
   ];
 
   let attempts = 0;
-  const maxAttempts = 100; // Prevent infinite loops
+  const maxAttempts = 150; // Increased attempts to find better variety
 
-  while (reservations.length < reservationCount && attempts < maxAttempts) {
+  while (
+    reservations.length < targetReservationCount &&
+    attempts < maxAttempts
+  ) {
     attempts++;
 
     // Pick a random day in the month
     const day = faker.number.int({ min: 1, max: daysInMonth });
-    const startDayDate = new Date(year, month, day);
 
     // Generate reservation length (1-7 days, but don't exceed month end)
+    // We also want to leave at least 1 day gap occasionally, but the overlap check handles it.
     const maxLength = Math.min(7, daysInMonth - day + 1);
     const nights = faker.number.int({ min: 1, max: maxLength });
 
-    // Create start date with proper check-in time
-    const startDate = createUTCDateWithTime(
-      startDayDate,
-      checkInTime,
-      timezone,
-    );
+    // Create start date at UTC midnight
+    const startDate = createUTCDate(year, month, day);
 
-    // Create end date with proper check-out time
-    const endDateDay = new Date(
-      startDayDate.getTime() + nights * 24 * 60 * 60 * 1000,
-    );
-    const endDate = createUTCDateWithTime(endDateDay, checkOutTime, timezone);
-
-    // Ensure end date doesn't exceed month end
-    if (endDate > monthEnd) {
-      endDate.setTime(monthEnd.getTime());
-    }
+    // Create end date at UTC midnight (exclusive)
+    const endDate = createUTCDate(year, month, day + nights);
 
     // Check if this reservation overlaps with existing ones
+    // To ensure gaps, we can check if it overlaps with [start-1, end+1]
+    // but the requirement is just "leave some gaps", which random placement naturally does.
     const overlaps = occupiedRanges.some((range) =>
       datesOverlap(startDate, endDate, range.start, range.end),
     );
@@ -255,37 +236,30 @@ function generateReservationsForMonth(
       reservations.push({ startDate, endDate, guests });
       occupiedRanges.push({ start: startDate, end: endDate });
 
-      const actualNights = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000),
-      );
       console.log(
-        `     ✅ Added reservation: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]} (${actualNights} nights)`,
+        `     ✅ Added: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]} (${nights} nights)`,
       );
     }
   }
 
-  if (reservations.length < reservationCount) {
+  if (reservations.length < targetReservationCount) {
     console.log(
-      `     ⚠️  Only generated ${reservations.length} reservations (could not find ${reservationCount} non-overlapping dates)`,
+      `     ⚠️  Only generated ${reservations.length}/${targetReservationCount} reservations (density limit reached)`,
     );
   }
 
   return reservations;
 }
-
 async function generateReservationsForMonthParam() {
   try {
-    // ✅ HARDCODED MONTH PARAMETER - Change this to the desired month
-    // Format: year, month (0-11, where 0 = January, 11 = December)
-    // Example: October 2025 = year: 2025, month: 9
     const targetYear = 2026;
-    const targetMonth = 2; // December (0-indexed: 0=Jan, 1=Feb, ..., 9=Oct, 10=Nov, 11=Dec)
+    const targetMonth = 4; // May (0-indexed)
 
     console.log(
-      `🚀 Starting reservations generation for ${new Date(targetYear, targetMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}...`,
+      `🚀 Starting reservations generation for ${new Date(Date.UTC(targetYear, targetMonth)).toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' })}...`,
     );
 
-    // Get all published listings with their details
+    // Get all published listings
     const listings = await prisma.listing.findMany({
       where: { status: 'PUBLISHED' },
       select: {
@@ -294,22 +268,12 @@ async function generateReservationsForMonthParam() {
         propertyType: true,
         nightPrice: true,
         promotions: true,
-        beds: true,
-        bedrooms: true,
-        bathrooms: true,
         maxAdults: true,
         maxChildren: true,
         maxInfants: true,
         maxPets: true,
         maxGuests: true,
         hostId: true,
-        checkInTime: true,
-        checkOutTime: true,
-        city: true,
-        country: true,
-        lat: true,
-        lng: true,
-        location: true,
       },
     });
 
@@ -321,7 +285,7 @@ async function generateReservationsForMonthParam() {
       );
     }
 
-    // Get all users (for guest selection)
+    // Get all users
     const users = await prisma.profile.findMany({
       select: { id: true, firstName: true, lastName: true },
     });
@@ -335,8 +299,8 @@ async function generateReservationsForMonthParam() {
     }
 
     // Get existing reservations for the target month to avoid overlaps
-    const monthStart = new Date(targetYear, targetMonth, 1);
-    const monthEnd = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
+    const monthStart = createUTCDate(targetYear, targetMonth, 1);
+    const monthEnd = createUTCDate(targetYear, targetMonth + 1, 0);
 
     const existingReservations = await prisma.reservation.findMany({
       where: {
@@ -363,7 +327,6 @@ async function generateReservationsForMonthParam() {
     let totalReservations = 0;
 
     for (const listing of listings) {
-      // Parse structure to get max guests
       const maxGuests = listing.maxGuests;
 
       // Parse guest limits
@@ -374,27 +337,17 @@ async function generateReservationsForMonthParam() {
         pets: { min: 0, max: listing.maxPets },
       };
 
-      // Parse location to get timezone
-      const location = listing.location as ListingLocationFromDB;
-      const timezone = location?.timezone || 'UTC';
-
       console.log(
         `\n🏠 Generating reservations for "${listing.title}" (${listing.propertyType})`,
       );
-      console.log(
-        `   Max guests: ${maxGuests}, Night price: $${listing.nightPrice}`,
-      );
-      console.log(
-        `   Check-in: ${listing.checkInTime}, Check-out: ${listing.checkOutTime}, Timezone: ${timezone}`,
-      );
 
-      // Get existing reservations for this listing in the target month
+      // Get existing reservations for this listing
       const listingExistingReservations = existingReservations
         .filter((r) => r.listingId === listing.id)
         .map((r) => ({
           startDate: r.startDate,
           endDate: r.endDate,
-          guests: {} as Record<Guests, number>, // We don't need guests for overlap checking
+          guests: {} as Record<Guests, number>,
         }));
 
       // Generate reservations for the target month
@@ -403,42 +356,31 @@ async function generateReservationsForMonthParam() {
         targetMonth,
         maxGuests,
         guestLimits,
-        listing.checkInTime,
-        listing.checkOutTime,
-        timezone,
         listingExistingReservations,
       );
 
-      console.log(`   📅 Generated ${reservationPattern.length} reservations`);
-
       for (const { startDate, endDate, guests } of reservationPattern) {
-        const nights = Math.ceil(
+        const nights = Math.round(
           (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000),
         );
 
-        // Calculate pricing (only promotions affect price)
+        // Calculate pricing
         const pricing = calculateReservationPricing(
           Number(listing.nightPrice),
           nights,
           listing.promotions as Promotion[],
         );
 
-        // Select a random user as guest (not the host)
+        // Select random guest
         const availableGuests = users.filter(
           (user) => user.id !== listing.hostId,
         );
-        if (availableGuests.length === 0) {
-          console.log(
-            `   ⚠️  Skipping reservation - no available guests (all users are hosts)`,
-          );
-          continue;
-        }
+        if (availableGuests.length === 0) continue;
         const guest = faker.helpers.arrayElement(availableGuests);
 
-        // Determine status based on dates
+        // Determine status
         const status = generateReservationStatus(endDate);
 
-        // ✅ NO MANUAL ID GENERATION - Let Supabase handle it
         const reservationData: Prisma.ReservationCreateManyInput = {
           userId: guest.id,
           listingId: listing.id,
@@ -452,14 +394,14 @@ async function generateReservationsForMonthParam() {
           discountPercentage: pricing.discountPercentage,
           status: status,
           createdAt: faker.date.between({
-            from: new Date(startDate.getTime() - 30 * 24 * 60 * 60 * 1000), // Created 30 days before start
+            from: new Date(startDate.getTime() - 30 * 24 * 60 * 60 * 1000),
             to: startDate,
           }),
           canceledAt:
             status === ReservationStatus.CANCELED ||
             status === ReservationStatus.CANCELED_BY_HOST
               ? faker.date.between({
-                  from: new Date(startDate.getTime() - 7 * 24 * 60 * 60 * 1000), // Canceled 7 days before start
+                  from: new Date(startDate.getTime() - 7 * 24 * 60 * 60 * 1000),
                   to: startDate,
                 })
               : null,
@@ -472,7 +414,6 @@ async function generateReservationsForMonthParam() {
 
     console.log(`\n🚀 Creating ${totalReservations} reservations in bulk...`);
 
-    // Bulk create all reservations
     const createdReservations = await prisma.reservation.createMany({
       data: reservationsData,
     });
@@ -481,90 +422,9 @@ async function generateReservationsForMonthParam() {
       `✅ Successfully created ${createdReservations.count} reservations!`,
     );
 
-    // Verify the creation
-    const totalReservationsInDb = await prisma.reservation.count();
-    const monthReservations = await prisma.reservation.count({
-      where: {
-        startDate: {
-          lte: monthEnd,
-        },
-        endDate: {
-          gte: monthStart,
-        },
-      },
-    });
-
     console.log('\n🎉 Reservations generation completed successfully!');
-    console.log(`   Total reservations created: ${createdReservations.count}`);
-    console.log(
-      `   📊 Total reservations in database: ${totalReservationsInDb}`,
-    );
-    console.log(`   📅 Reservations in target month: ${monthReservations}`);
-
-    // Show sample reservations
-    console.log('\n📋 Sample created reservations:');
-    const sampleReservations = await prisma.reservation.findMany({
-      where: {
-        startDate: {
-          lte: monthEnd,
-        },
-        endDate: {
-          gte: monthStart,
-        },
-      },
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        listing: {
-          select: { title: true, propertyType: true },
-        },
-        user: {
-          select: { firstName: true },
-        },
-      },
-    });
-
-    sampleReservations.forEach((reservation, index) => {
-      const guestName = reservation.user?.firstName;
-      const listingTitle = reservation.listing.title;
-      const startDate = reservation.startDate.toISOString().split('T')[0];
-      const endDate = reservation.endDate.toISOString().split('T')[0];
-      const discountText = reservation.discountPercentage
-        ? ` (${reservation.discountPercentage}% off)`
-        : '';
-      const guests = reservation.guests as unknown as Record<Guests, number>;
-      const guestText = `${guests.adults} adults${guests.children > 0 ? `, ${guests.children} children` : ''}${
-        guests.infant > 0 ? `, ${guests.infant} infant` : ''
-      }${guests.pets > 0 ? `, ${guests.pets} pets` : ''}`;
-
-      console.log(`${index + 1}. ${guestName} → "${listingTitle}"`);
-      console.log(
-        `   ${startDate} to ${endDate} (${reservation.totalNights} nights)`,
-      );
-      console.log(
-        `   ${guestText} - $${Number(reservation.totalPrice)}${discountText} - Status: ${reservation.status}`,
-      );
-    });
-
-    console.log('\n✨ Database population completed successfully!');
-    console.log(
-      `📅 Reservations created for ${new Date(targetYear, targetMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}!`,
-    );
-    console.log('💰 Pricing calculated with promotions!');
-    console.log(
-      "👥 Guest combinations respect each listing's specific limits!",
-    );
-    console.log('📊 No overlapping reservations for the same listing!');
   } catch (error) {
     console.error('❌ Error generating reservations:', error);
-
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      if (error.stack) {
-        console.error('Stack trace:', error.stack);
-      }
-    }
-
     process.exit(1);
   } finally {
     await prisma.$disconnect();

@@ -1,10 +1,11 @@
 import { Prisma } from '@prisma/client';
+import { Guests } from '@src/listings/types/listing.types';
 
 export type CreateReservationInput = {
   userId: string;
   listingId: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   guests: Prisma.InputJsonValue;
   totalPrice: number;
   totalNights: number;
@@ -15,6 +16,8 @@ export type CreateReservationInput = {
 
 export type ConflictingReservationsInput = {
   listingId: string;
-  startDate: Date;
-  endDate: Date;
+  newStartDate: string;
+  newEndDate: string;
 };
+
+export type ReservationGuests = Record<Guests, number>;
