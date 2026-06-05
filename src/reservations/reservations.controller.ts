@@ -3,7 +3,7 @@ import { ApiBadRequestResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
 import { Public } from '@src/auth/public.decorator';
-import { SuccessResponseDto } from './dto/reservation-response.dto';
+import { SuccessReservationResponseDto } from './dto/reservation-response.dto';
 import { CreateReservationDto } from './dto/reservations-create.dto';
 import { ListingUnavailableDatesDto } from './dto/reservations-unavailable-dates.dto';
 import { ReservationsService } from './reservations.service';
@@ -24,7 +24,7 @@ export class ReservationsController {
   }
 
   // Private
-  @ApiOkResponse({ type: SuccessResponseDto })
+  @ApiOkResponse({ type: SuccessReservationResponseDto })
   @ApiBadRequestResponse({
     type: ErrorResponseDto,
   })
@@ -33,7 +33,7 @@ export class ReservationsController {
     @Param('id') id: string,
     @Body() data: CreateReservationDto,
     @CurrentUser() user: AuthUser,
-  ): Promise<SuccessResponseDto> {
+  ): Promise<SuccessReservationResponseDto> {
     return this.service.create(id, data, user);
   }
 }

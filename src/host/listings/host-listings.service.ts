@@ -5,16 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ListingStatus } from '@prisma/client';
-import { ResubmitResponseDto } from '@src/host/listings/dto/resubmit-response.dto';
 import { HostListingRepository } from '@src/host/listings/repositories/host-listing.repository';
+import { SuccessResponseDto } from '@src/shared/dto/success-response.dto';
 import {
   HostListingDetailsResponseDto,
   HostListingResponseDto,
 } from './dto/host-listings.dto';
-import {
-  PartialUpdateListingDto,
-  SuccessResponseDto,
-} from './dto/update-listing.dto';
+import { PartialUpdateListingDto } from './dto/update-listing.dto';
 
 @Injectable()
 export class HostListingsService {
@@ -60,7 +57,7 @@ export class HostListingsService {
   async resubmit(
     listingId: string,
     hostId: string,
-  ): Promise<ResubmitResponseDto> {
+  ): Promise<SuccessResponseDto> {
     const listing = await this.repository.findRawById(listingId);
 
     if (!listing) {
@@ -86,7 +83,7 @@ export class HostListingsService {
     return { success: true };
   }
 
-  async pause(listingId: string, hostId: string): Promise<ResubmitResponseDto> {
+  async pause(listingId: string, hostId: string): Promise<SuccessResponseDto> {
     const listing = await this.repository.findRawById(listingId);
 
     if (!listing) {

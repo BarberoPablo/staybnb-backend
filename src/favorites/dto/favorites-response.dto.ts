@@ -5,11 +5,6 @@ export class IsFavoriteResponseDto {
   isFavorite: boolean;
 }
 
-export class FavoriteActionResponseDto {
-  @ApiProperty()
-  success: boolean;
-}
-
 export class FavoriteListingLocationDto {
   @ApiProperty()
   city: string;

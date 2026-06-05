@@ -40,7 +40,7 @@ export class ReservationResponseDto {
   createdAt: Date;
 }
 
-export class SuccessResponseDto {
+export class SuccessReservationResponseDto {
   @ApiProperty()
   success: boolean;
 

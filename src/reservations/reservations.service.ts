@@ -21,7 +21,7 @@ import { ProfilesRepository } from '@src/profiles/repositories/profiles.reposito
 import { formatInTimeZone } from 'date-fns-tz';
 import {
   ReservationResponseDto,
-  SuccessResponseDto,
+  SuccessReservationResponseDto,
 } from './dto/reservation-response.dto';
 import {
   CreateReservationDto,
@@ -77,7 +77,7 @@ export class ReservationsService {
     listingId: string,
     data: CreateReservationDto,
     user: AuthUser,
-  ): Promise<SuccessResponseDto> {
+  ): Promise<SuccessReservationResponseDto> {
     const { startDate, endDate, guests } = data;
 
     if (endDate <= startDate) {

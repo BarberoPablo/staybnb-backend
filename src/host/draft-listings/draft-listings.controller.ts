@@ -10,10 +10,10 @@ import {
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
+import { SuccessResponseDto } from '@src/shared/dto/success-response.dto';
 import { DraftListingsService } from './draft-listings.service';
 import {
   DraftListingResponseDto,
-  SuccessResponseDto,
   SuccessWithListingIdResponseDto,
 } from './dto/draft-listing-response.dto';
 import { PartialUpdateDraftListingDto } from './dto/draft-listing-update.dto';
