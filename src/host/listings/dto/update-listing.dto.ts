@@ -223,8 +223,3 @@ export class UpdateListingDto {
 }
 
 export class PartialUpdateListingDto extends PartialType(UpdateListingDto) {}
-
-export class SuccessResponseDto {
-  @ApiProperty()
-  success: boolean;
-}

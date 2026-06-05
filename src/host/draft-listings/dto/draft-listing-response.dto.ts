@@ -69,11 +69,6 @@ export class DraftListingResponseDto {
   updatedAt: Date;
 }
 
-export class SuccessResponseDto {
-  @ApiProperty()
-  success: boolean;
-}
-
 export class SuccessWithListingIdResponseDto {
   @ApiProperty()
   success: boolean;

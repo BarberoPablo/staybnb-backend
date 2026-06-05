@@ -8,16 +8,13 @@ import {
 } from '@nestjs/swagger';
 import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
-import { ResubmitResponseDto } from '@src/host/listings/dto/resubmit-response.dto';
 import { HostListingsService } from '@src/host/listings/host-listings.service';
+import { SuccessResponseDto } from '@src/shared/dto/success-response.dto';
 import {
   HostListingDetailsResponseDto,
   HostListingResponseDto,
 } from './dto/host-listings.dto';
-import {
-  PartialUpdateListingDto,
-  SuccessResponseDto,
-} from './dto/update-listing.dto';
+import { PartialUpdateListingDto } from './dto/update-listing.dto';
 
 @ApiTags('Host Listings')
 @Controller('host/listings')
@@ -54,7 +51,7 @@ export class HostListingsController {
     return this.service.updateListing(id, user.id, updateDto);
   }
 
-  @ApiOkResponse({ type: ResubmitResponseDto })
+  @ApiOkResponse({ type: SuccessResponseDto })
   @ApiNotFoundResponse({ description: 'Listing not found' })
   @ApiForbiddenResponse({ description: 'You do not own this listing' })
   @ApiBadRequestResponse({
@@ -64,11 +61,11 @@ export class HostListingsController {
   async resubmitListing(
     @Param('id') listingId: string,
     @CurrentUser() user: AuthUser,
-  ): Promise<ResubmitResponseDto> {
+  ): Promise<SuccessResponseDto> {
     return this.service.resubmit(listingId, user.id);
   }
 
-  @ApiOkResponse({ type: ResubmitResponseDto })
+  @ApiOkResponse({ type: SuccessResponseDto })
   @ApiNotFoundResponse({ description: 'Listing not found' })
   @ApiForbiddenResponse({ description: 'You do not own this listing' })
   @ApiBadRequestResponse({
@@ -78,7 +75,7 @@ export class HostListingsController {
   async pauseListing(
     @Param('id') listingId: string,
     @CurrentUser() user: AuthUser,
-  ): Promise<ResubmitResponseDto> {
+  ): Promise<SuccessResponseDto> {
     return this.service.pause(listingId, user.id);
   }
 }
