@@ -28,7 +28,8 @@ import {
   ReservationGuestsDto,
 } from './dto/reservations-create.dto';
 import { ListingUnavailableDatesDto } from './dto/reservations-unavailable-dates.dto';
-import { addDays } from './mappers/reservations.mapper';
+import { UserReservationResponseDto } from './dto/user-reservation-response.dto';
+import { addDays, toDateString } from './mappers/reservations.mapper';
 import { ReservationRepository } from './repositories/reservation.repository';
 
 @Injectable()
@@ -71,6 +72,84 @@ export class ReservationsService {
       unavailableCheckInDates: Array.from(unavailableCheckInDates).sort(),
       unavailableCheckOutDates: Array.from(unavailableCheckOutDates).sort(),
     };
+  }
+
+  async findMy(user: AuthUser): Promise<UserReservationResponseDto[]> {
+    const reservations = await this.repository.findByUserId(user.id);
+
+    return reservations.map((reservation) => {
+      const now = new Date();
+      const endDate = new Date(reservation.endDate);
+      const isPast = endDate < now;
+
+      const effectiveStatus =
+        reservation.status === 'CANCELED' ||
+        reservation.status === 'CANCELED_BY_HOST'
+          ? reservation.status
+          : isPast
+            ? 'COMPLETED'
+            : 'UPCOMING';
+
+      const listingLocation = reservation.listing.location as {
+        state?: string;
+        formatted?: string;
+      };
+
+      const userReview =
+        reservation.listing.reviews.find(
+          (review) => review.userId === user.id,
+        ) ?? null;
+
+      return {
+        id: reservation.id,
+        userId: reservation.userId!,
+        listingId: reservation.listingId,
+        startDate: toDateString(new Date(reservation.startDate)),
+        endDate: toDateString(new Date(reservation.endDate)),
+        guests: reservation.guests as {
+          adults: number;
+          children: number;
+          infant: number;
+          pets: number;
+        },
+        totalPrice: reservation.totalPrice.toNumber(),
+        totalNights: reservation.totalNights,
+        nightPrice: reservation.nightPrice.toNumber(),
+        discount: reservation.discount
+          ? reservation.discount.toNumber()
+          : null,
+        discountPercentage: reservation.discountPercentage,
+        status: effectiveStatus,
+        listing: {
+          id: reservation.listing.id,
+          title: reservation.listing.title,
+          images: reservation.listing.images,
+          location: {
+            city: reservation.listing.city,
+            state: listingLocation.state ?? '',
+            country: reservation.listing.country,
+            lat: reservation.listing.lat,
+            lng: reservation.listing.lng,
+            formatted: listingLocation.formatted ?? '',
+          },
+          nightPrice: reservation.listing.nightPrice,
+          propertyType: reservation.listing.propertyType,
+          privacyType: reservation.listing.privacyType,
+          checkInTime: reservation.listing.checkInTime,
+          checkOutTime: reservation.listing.checkOutTime,
+          score: {
+            value: reservation.listing.ratingAvg,
+            userReview: userReview
+              ? {
+                  score: userReview.score,
+                  message: userReview.message,
+                  userId: userReview.userId,
+                }
+              : null,
+          },
+        },
+      };
+    });
   }
 
   async create(

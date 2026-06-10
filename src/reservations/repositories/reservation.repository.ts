@@ -7,6 +7,10 @@ import {
   ConflictingReservationsInput,
   CreateReservationInput,
 } from '../types/reservations.types';
+import {
+  RESERVATION_WITH_LISTING_INCLUDE,
+  ReservationWithListing,
+} from './reservation.repository.types';
 
 @Injectable()
 export class ReservationRepository {
@@ -58,6 +62,14 @@ export class ReservationRepository {
     return reservations.map((reservation) =>
       ReservationsMapper.mapReservationDatesToString(reservation),
     );
+  }
+
+  async findByUserId(userId: string): Promise<ReservationWithListing[]> {
+    return this.prisma.reservation.findMany({
+      where: { userId },
+      include: RESERVATION_WITH_LISTING_INCLUDE,
+      orderBy: { startDate: 'asc' },
+    });
   }
 
   async create(data: CreateReservationInput): Promise<ReservationResponseDto> {
