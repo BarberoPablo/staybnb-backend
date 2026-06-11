@@ -20,17 +20,15 @@ import {
 import { ProfilesRepository } from '@src/profiles/repositories/profiles.repository';
 import { formatInTimeZone } from 'date-fns-tz';
 import {
-  ReservationResponseDto,
-  SuccessReservationResponseDto,
-} from './dto/reservation-response.dto';
-import {
   CreateReservationDto,
   ReservationGuestsDto,
 } from './dto/reservations-create.dto';
 import { ListingUnavailableDatesDto } from './dto/reservations-unavailable-dates.dto';
+import { SuccessReservationResponseDto } from './dto/success-reservation-response.dto';
 import { UserReservationResponseDto } from './dto/user-reservation-response.dto';
 import { addDays, toDateString } from './mappers/reservations.mapper';
 import { ReservationRepository } from './repositories/reservation.repository';
+import { ReservationResponseDto } from './repositories/reservation.repository.types';
 
 @Injectable()
 export class ReservationsService {
@@ -115,9 +113,7 @@ export class ReservationsService {
         totalPrice: reservation.totalPrice.toNumber(),
         totalNights: reservation.totalNights,
         nightPrice: reservation.nightPrice.toNumber(),
-        discount: reservation.discount
-          ? reservation.discount.toNumber()
-          : null,
+        discount: reservation.discount ? reservation.discount.toNumber() : null,
         discountPercentage: reservation.discountPercentage,
         status: effectiveStatus,
         listing: {

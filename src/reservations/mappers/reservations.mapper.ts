@@ -1,5 +1,5 @@
 import { Reservation } from '@prisma/client';
-import { ReservationResponseDto } from '@src/reservations/dto/reservation-response.dto';
+import { ReservationResponseDto } from '@src/reservations/repositories/reservation.repository.types';
 import { ReservationGuestsDto } from '@src/reservations/dto/reservations-create.dto';
 
 export class ReservationsMapper {

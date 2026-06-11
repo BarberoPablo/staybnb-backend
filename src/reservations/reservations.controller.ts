@@ -4,9 +4,9 @@ import type { AuthUser } from '@src/auth/auth-user';
 import { CurrentUser } from '@src/auth/current-user.decorator';
 import { Public } from '@src/auth/public.decorator';
 import { ErrorResponseDto } from '@src/errors/dto/error-response.dto';
-import { SuccessReservationResponseDto } from './dto/reservation-response.dto';
 import { CreateReservationDto } from './dto/reservations-create.dto';
 import { ListingUnavailableDatesDto } from './dto/reservations-unavailable-dates.dto';
+import { SuccessReservationResponseDto } from './dto/success-reservation-response.dto';
 import { UserReservationResponseDto } from './dto/user-reservation-response.dto';
 import { ReservationsService } from './reservations.service';
 

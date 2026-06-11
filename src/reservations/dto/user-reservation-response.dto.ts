@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ReservationStatus } from '@prisma/client';
 
 export class UserReservationGuestsDto {
   @ApiPropertyOptional()
@@ -119,8 +120,8 @@ export class UserReservationResponseDto {
   @ApiPropertyOptional({ nullable: true })
   discountPercentage: number | null;
 
-  @ApiProperty()
-  status: string;
+  @ApiProperty({ enum: ReservationStatus, enumName: 'ReservationStatus' })
+  status: ReservationStatus;
 
   @ApiProperty({ type: UserReservationListingDto })
   listing: UserReservationListingDto;
