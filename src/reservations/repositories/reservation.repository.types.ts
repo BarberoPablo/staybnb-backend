@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, ReservationStatus } from '@prisma/client';
 
 export const RESERVATION_WITH_LISTING_INCLUDE = {
   listing: {
@@ -31,3 +31,23 @@ export const RESERVATION_WITH_LISTING_INCLUDE = {
 export type ReservationWithListing = Prisma.ReservationGetPayload<{
   include: typeof RESERVATION_WITH_LISTING_INCLUDE;
 }>;
+
+export type ReservationResponseDto = {
+  id: string;
+  listingId: string;
+  startDate: string;
+  endDate: string;
+  guests: {
+    adults: number;
+    children: number;
+    infant: number;
+    pets: number;
+  };
+  totalPrice: number;
+  totalNights: number;
+  nightPrice: number;
+  discount: number | null;
+  discountPercentage: number | null;
+  status: ReservationStatus;
+  createdAt: Date;
+};

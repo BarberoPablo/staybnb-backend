@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Reservation } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { ReservationResponseDto } from '../dto/reservation-response.dto';
 import { ReservationsMapper, toUtcDate } from '../mappers/reservations.mapper';
 import {
   ConflictingReservationsInput,
@@ -9,6 +8,7 @@ import {
 } from '../types/reservations.types';
 import {
   RESERVATION_WITH_LISTING_INCLUDE,
+  ReservationResponseDto,
   ReservationWithListing,
 } from './reservation.repository.types';
 
